@@ -11,7 +11,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 |---|------|--------|
 | 1 | Scaffold, install packages, confirm the app opens in Expo Go | Done (opens in Expo Go on SDK 57) |
 | 2 | Game shell on mock responses | Built: menu → 3 placeholder levels → results, with timers, resets and scoring. **Needs a phone check** |
-| 3 | Gemma client and mocks | Not started |
+| 3 | Gemma client and mocks | Built (`src/gemma.ts`, `src/mocks.ts`). Real calls untested: **the key's AI Studio project has no credits (HTTP 402)**, so the app uses mocks for now |
 | 4 | Level 2: drawing | Not started |
 | 5 | Level 3: camera hunt | Not started |
 | 6 | Jumpscares, music, loader | Not started |
@@ -35,7 +35,7 @@ Update this table as steps land.
   2. Under Authentication, turn on **Email/Password**.
   3. Create a **Firestore** database in **test mode**.
   4. Add a **Web app** and copy its config into the `EXPO_PUBLIC_FIREBASE_*` keys in `.env`.
-- [ ] **Gemma key:** paste the Google AI Studio key into `EXPO_PUBLIC_GEMMA_API_KEY` in `.env`.
+- [ ] **Gemma billing:** the key returns HTTP 402 "prepayment credits are depleted". Add credits at https://ai.studio/projects, or use a key from a project without prepaid billing. Then run `node --env-file=.env scripts/gemma-smoke.mjs` and check that both requests return JSON.
 - [ ] **Demo plan:** to be written later (PRD section 10).
 
 ## Setup (for anyone on the team)
@@ -53,6 +53,7 @@ Update this table as steps land.
 | Command | What it does |
 |---------|--------------|
 | `node --test src/scoring.test.ts` | Runs the scoring tests (Node 22.6+; no test package needed) |
+| `node --env-file=.env scripts/gemma-smoke.mjs` | Sends one text and one image request to Gemma to check the key |
 | `npx tsc --noEmit` | Type check (test files are excluded) |
 | `npx expo-doctor` | Checks dependency health |
 | `npx expo install <pkg>` | Adds a package at the version that matches SDK 57. Use this, not `npm install <pkg>` |

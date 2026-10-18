@@ -16,7 +16,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
 | 6 | Jumpscares, music, loader | Built: jumpscare pop-up and sound on every timeout, failed drawing and failed photo, 1–2 random scares per run, looping music, Lottie skull loader. **Needs a phone check** |
 | 7 | Firebase auth, saving runs, leaderboard | Not started. **Needs the Firebase project** |
-| 8 | Level 1: puzzles | Not started |
+| 8 | Level 1: puzzles | Built: 3 riddle/math puzzles from Gemma (mock for now), typed answers checked loosely, new puzzles on reset. Sudoku skipped for now. **Needs a phone check** |
 | 9 | Polish the full run | Not started |
 
 **Already done:**

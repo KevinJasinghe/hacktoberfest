@@ -39,15 +39,6 @@ export default function Level2({ onClear, onTimeout }: LevelProps) {
     drawingPrompt().then(setPrompt);
   }, []);
 
-  // One guaranteed surprise jumpscare at a random moment while the player is drawing.
-  const scareRef = useRef(scare);
-  scareRef.current = scare;
-  useEffect(() => {
-    if (!prompt) return;
-    const id = setTimeout(() => scareRef.current(), (4 + Math.random() * 18) * 1000);
-    return () => clearTimeout(id);
-  }, [prompt]);
-
   const start = (x: number, y: number) => {
     const p = Skia.Path.Make();
     p.moveTo(x, y);

@@ -9,7 +9,7 @@ export type Track = 'main' | 'tense' | 'dungeon';
 // Sound effects (the jumpscare sounds live in Jumpscare.tsx).
 export type SfxName = 'keeper' | 'turn' | 'prisoner' | 'lockOpen' | 'wrong' | 'hint' | 'creak' | 'doorOpen' | 'chain' | 'heartbeat' | 'heartbeatSlow' | 'place';
 
-const TRACK_VOLUME: Record<Track, number> = { main: 0.5, tense: 0.5, dungeon: 0.55 };
+const TRACK_VOLUME: Record<Track, number> = { main: 0.85, tense: 0.85, dungeon: 0.85 };
 const FADE_OUT_MS = 700;
 const FADE_IN_MS = 1200;
 const STEP_MS = 50;

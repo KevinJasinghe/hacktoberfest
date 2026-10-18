@@ -15,7 +15,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 4 | Level 2: drawing | Built: Skia finger drawing, Clear/Submit, Gemma score (mock for now), redraw on 75 or below. Jumpscare on failure comes in step 6. **Needs a phone check** |
 | 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
 | 6 | Jumpscares, music, loader | Built: jumpscare pop-up and sound on every timeout, failed drawing and failed photo, 1–2 random scares per run, looping music, Lottie skull loader. **Needs a phone check** |
-| 7 | Firebase auth, saving runs, leaderboard | Built: email/password sign-up with display name, saved login, completed runs saved, best-run leaderboard. Untested: **needs the Firebase keys in `.env`**. Without them the app runs as a guest with no leaderboard |
+| 7 | Firebase auth, saving runs, leaderboard | Built, and the Firebase project is set up (`scripts/firebase-smoke.mjs` passes). Without keys in `.env` the app runs as a guest with no leaderboard. **Needs a phone check** |
 | 8 | Level 1: puzzles | Built: 3 riddle/math puzzles from Gemma (mock for now), typed answers checked loosely, new puzzles on reset. Sudoku skipped for now. **Needs a phone check** |
 | 9 | Polish the full run | Not started |
 
@@ -30,11 +30,6 @@ Update this table as steps land.
 ## Open to-dos (blocking)
 
 - [ ] **Skull animation (optional):** `assets/lottie/skull.json` is a simple hand-made skull. To use a nicer one, download a skull from https://lottiefiles.com/free-animations/skull as **Lottie JSON** (not dotLottie), overwrite that file, and update its row in `CREDITS.md`.
-- [ ] **Firebase project:**
-  1. Create the project.
-  2. Under Authentication, turn on **Email/Password**.
-  3. Create a **Firestore** database in **test mode**.
-  4. Add a **Web app** and copy its config into the `EXPO_PUBLIC_FIREBASE_*` keys in `.env`.
 - [ ] **Demo plan:** to be written later (PRD section 10).
 
 ## Setup (for anyone on the team)
@@ -53,6 +48,7 @@ Update this table as steps land.
 |---------|--------------|
 | `node --test src/scoring.test.ts` | Runs the scoring tests (Node 22.6+; no test package needed) |
 | `node --env-file=.env scripts/gemma-smoke.mjs` | Sends one text and one image request to Gemma to check the key |
+| `node --env-file=.env scripts/firebase-smoke.mjs` | Signs up a throwaway account, saves a run, reads the leaderboard, then deletes it all |
 | `npx tsc --noEmit` | Type check (test files are excluded) |
 | `npx expo-doctor` | Checks dependency health |
 | `npx expo install <pkg>` | Adds a package at the version that matches SDK 57. Use this, not `npm install <pkg>` |

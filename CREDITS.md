@@ -12,6 +12,12 @@ All third-party assets used in the app and their licenses.
 | `assets/audio/scare-bass.wav` | Horror Hit Soundpack 1 ("Very Bassy 1") | psychhead_ | CC0 | https://opengameart.org/content/horror-hit-soundpack-1 |
 | `assets/audio/ghost.wav` | Scary High-pitched Ghost | Fupi | CC0 | https://opengameart.org/content/scary-high-pitched-ghost |
 
+## Images
+
+| File | Asset | Author | License | Source |
+|------|-------|--------|---------|--------|
+| `assets/images/cellar-wall.jpg` | Dark Brick Wall (diffuse, 1k, resized to 768 px) | Dario Barresi, Dimitrios Savva | CC0 | https://polyhaven.com/a/dark_brick_wall |
+
 ## Animations
 
 | File | Asset | Author | License | Source |

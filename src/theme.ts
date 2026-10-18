@@ -9,6 +9,9 @@ export const colors = {
   dim: '#8a7f78',
 };
 
+// GameScreen pads its levels (20px sides/bottom, 64px top). Overlays use these negative insets to cover the whole screen.
+export const SCREEN_BLEED = { top: -64, left: -20, right: -20, bottom: -20 };
+
 export const ui = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg, padding: 20, paddingTop: 64 },
   center: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 20 },

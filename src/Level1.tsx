@@ -12,7 +12,7 @@ import { LEVEL_LIMITS } from './scoring';
 import { generateSudoku } from './sudoku';
 import SudokuBoard from './SudokuBoard';
 import TimerBar from './TimerBar';
-import { colors, ui } from './theme';
+import { colors, SCREEN_BLEED, ui } from './theme';
 import Typewriter from './Typewriter';
 import { useCountdown } from './useCountdown';
 
@@ -173,5 +173,5 @@ const styles = StyleSheet.create({
   skip: { marginTop: 16, alignItems: 'center', padding: 8 },
   skipText: { color: colors.dim, fontSize: 13, letterSpacing: 1, textDecorationLine: 'underline' },
   hint: { color: colors.dim, fontStyle: 'italic', marginTop: 10 },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.bloodBright, zIndex: 5 },
+  flash: { position: 'absolute', ...SCREEN_BLEED, backgroundColor: colors.bloodBright, zIndex: 5 },
 });

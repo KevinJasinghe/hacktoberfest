@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
+import { SCREEN_BLEED } from './theme';
 
 const START_SEC = 60; // the walls begin closing in with this much time left
 const MAX_BORDER = 70;
@@ -32,5 +33,5 @@ export default function ClosingWalls({ remaining }: { remaining: number }) {
 }
 
 const styles = StyleSheet.create({
-  walls: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderColor: 'rgba(0,0,0,0.88)', zIndex: 10 },
+  walls: { position: 'absolute', ...SCREEN_BLEED, borderColor: 'rgba(0,0,0,0.88)', zIndex: 10 },
 });

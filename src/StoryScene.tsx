@@ -39,6 +39,7 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
   const dark = useRef(new Animated.Value(0)).current; // blackout overlay
   const flash = useRef(new Animated.Value(0)).current; // red flash on a lunge
   const prevWho = useRef<Beat['who'] | null>(null);
+  const lastGhostMood = useRef<Beat['mood'] | null>(null);
 
   // Ambient loops: the character bobs, the "candle" flickers.
   useEffect(() => {
@@ -65,9 +66,15 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
         Animated.timing(dark, { toValue: 0, duration: 600, useNativeDriver: true }),
       ]).start();
     }
-    // The Keeper's sting plays when he appears: the first time in a scene, and again whenever he comes back
-    // after the narrator or another speaker (not on every consecutive line he speaks).
-    if (beat.who === 'ghost' && prevWho.current !== 'ghost') sfx('keeper', 0.85);
+    // Character stings. The Keeper's plays when he appears (the first time in a scene, and again whenever he comes
+    // back after someone else spoke, but not on every consecutive line). When he turns from cute to scary a darker
+    // sting plays instead. The prisoner has his own sting of bones and a groan.
+    const appears = beat.who === 'ghost' && prevWho.current !== 'ghost';
+    const turns = beat.who === 'ghost' && beat.mood === 'creepy' && lastGhostMood.current === 'cute';
+    if (turns) sfx('turn', 0.9);
+    else if (appears) sfx('keeper', 0.85);
+    if (beat.who === 'skeleton' && prevWho.current !== 'skeleton') sfx('prisoner', 0.9);
+    if (beat.who === 'ghost') lastGhostMood.current = beat.mood;
     prevWho.current = beat.who;
     if (beat.sfx) sfx(beat.sfx);
     if (beat.fx === 'lunge') {

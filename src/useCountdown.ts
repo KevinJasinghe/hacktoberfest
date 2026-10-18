@@ -33,6 +33,12 @@ export function useCountdown(limitSec: number, opts: { paused?: boolean; onExpir
   // Burns time off the clock (e.g. the cost of a hint).
   const penalize = (sec: number) => setRemainingMs((r) => Math.max(0, r - sec * 1000));
 
+  // Puts the full time back on the clock (e.g. for the next lock of the same level).
+  const reset = () => {
+    expiredRef.current = false;
+    setRemainingMs(limitSec * 1000);
+  };
+
   const remaining = remainingMs / 1000;
-  return { remaining, elapsed: limitSec - remaining, expired: remainingMs <= 0, penalize };
+  return { remaining, elapsed: limitSec - remaining, expired: remainingMs <= 0, penalize, reset };
 }

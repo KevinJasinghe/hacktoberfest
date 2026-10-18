@@ -9,7 +9,7 @@ import { hintsFor, MAX_HINTS } from './hints';
 import { LevelProps } from './levels';
 import Loader from './Loader';
 import NumberPad from './NumberPad';
-import { LEVEL_LIMITS } from './scoring';
+import { LEVEL1_LOCK_LIMIT } from './scoring';
 import { STORY } from './story';
 import StoryScene from './StoryScene';
 import TimerBar from './TimerBar';
@@ -17,12 +17,13 @@ import { colors, SCREEN_BLEED, ui } from './theme';
 import Typewriter from './Typewriter';
 import { useCountdown } from './useCountdown';
 
-const LIMIT = LEVEL_LIMITS[1];
-const HINT_COST = 15; // seconds burned per hint; each puzzle has MAX_HINTS rungs (src/hints.ts)
+const LIMIT = LEVEL1_LOCK_LIMIT; // each lock gets its own timer
+const HINT_COST = 3; // seconds burned per hint; each puzzle has MAX_HINTS rungs (src/hints.ts)
 const LOCK_NAMES = ['The Riddle', 'The Sum'];
 const LAST_LOCK = LOCK_NAMES.length - 1;
 
 // Level 1: a door with two locks. Lock 1 is a riddle and lock 2 a math puzzle, both written by Gemma.
+// Each lock has its own 15s timer; running out on either one resets the level.
 // A reset (timeout) remounts this level, which brings new puzzles.
 export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) {
   const [cellar, setCellar] = useState<Cellar | null>(null);
@@ -35,7 +36,11 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const shake = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(0)).current;
   const { music, sfx } = useAudio();
-  const t = useCountdown(LIMIT, { paused: !cellar || !!scene, onExpire: () => onTimeout(LIMIT) });
+  const banked = useRef({ left: 0, spent: 0 }); // time left and spent on the locks already opened
+  const t = useCountdown(LIMIT, {
+    paused: !cellar || !!scene,
+    onExpire: () => onTimeout(banked.current.spent + LIMIT),
+  });
 
   useEffect(() => {
     generatePuzzles().then((c) => {
@@ -53,7 +58,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   // Heartbeat (buzz and sound) once a second while the clock is nearly out.
   const secondsLeft = Math.ceil(t.remaining);
   useEffect(() => {
-    if (cellar && !scene && secondsLeft > 0 && secondsLeft <= 10) {
+    if (cellar && !scene && secondsLeft > 0 && secondsLeft <= 5) {
       haptics.heartbeat();
       sfx('heartbeat', 0.8);
     }
@@ -67,12 +72,17 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const openLock = (skipped = false) => {
     if (skipped && !__DEV__) return; // the skip path must never exist in a production build
     sfx('lockOpen');
+    banked.current.left += t.remaining;
+    banked.current.spent += t.elapsed;
     haptics.lockOpen();
     setGuess('');
     setHintCount(0);
     setSpirit(null);
     // Skipping behaves exactly like solving: the next story scene plays, only the puzzle is bypassed.
-    if (lock < LAST_LOCK) setLock(lock + 1);
+    if (lock < LAST_LOCK) {
+      setLock(lock + 1);
+      t.reset(); // the next lock starts on a fresh timer (paused while its story scene plays)
+    }
     setScene(lock === 0 ? 'lock0' : 'lock1'); // the last scene leads into Level 2 and then clears the level
   };
 
@@ -109,8 +119,8 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
 
   if (scene) {
     const beats = scene === 'intro' ? STORY.intro : STORY.afterLock[Number(scene.slice(-1))];
-    // The timer is paused during scenes, so clearing after the last one still reports the true time left.
-    const done = () => (scene === `lock${LAST_LOCK}` ? onClear(t.remaining, t.elapsed) : setScene(null));
+    // Time left and spent were banked as each lock opened, so the level reports the sum of both timers.
+    const done = () => (scene === `lock${LAST_LOCK}` ? onClear(banked.current.left, banked.current.spent) : setScene(null));
     return (
       <KeyboardAvoidingView style={{ flex: 1 }}>
         <StoryScene key={scene} beats={beats} onDone={done} />
@@ -179,7 +189,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
         )}
       </ScrollView>
       <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
-      <ClosingWalls remaining={t.remaining} />
+      <ClosingWalls remaining={t.remaining} startSec={LIMIT} />
     </KeyboardAvoidingView>
   );
 }

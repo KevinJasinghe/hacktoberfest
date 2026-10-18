@@ -1,7 +1,7 @@
 // Run with: node --test src/scoring.test.ts
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compareRuns, LEVEL3_ITEM_LIMITS, LEVEL_LIMITS, levelPoints, totalScore } from './scoring.ts';
+import { compareRuns, LEVEL1_LOCK_LIMIT, LEVEL3_ITEM_LIMITS, LEVEL_LIMITS, levelPoints, totalScore } from './scoring.ts';
 
 test('full time remaining earns 1000', () => {
   assert.equal(levelPoints(180, 180), 1000);
@@ -22,6 +22,13 @@ test('level 3 uses the summed time left on each item', () => {
   assert.equal(LEVEL_LIMITS[3], limit);
   // 30s left on the object, 15s on the selfie
   assert.equal(levelPoints(30 + 15, limit), 500);
+});
+
+test('level 1 uses the summed time left on each 15s lock', () => {
+  assert.equal(LEVEL1_LOCK_LIMIT, 15);
+  assert.equal(LEVEL_LIMITS[1], LEVEL1_LOCK_LIMIT * 2);
+  // 10s left on the riddle, 5s on the sum
+  assert.equal(levelPoints(10 + 5, LEVEL_LIMITS[1]), 500);
 });
 
 test('timeouts cost 250 each', () => {

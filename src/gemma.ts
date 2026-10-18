@@ -125,7 +125,7 @@ async function buildCellar(): Promise<Cellar> {
       'It must be plain arithmetic with whole numbers and the operators + - x only. ' +
       'Write every number as digits and state every number the player needs inside the question. ' +
       'Give the arithmetic as "expression" (for example "13 - 5 + 2"); the game computes the answer itself, so do not give one. ' +
-      'The result must be a whole number from 2 to 99, solvable in under 30 seconds.\n\n' +
+      'The result must be a whole number from 2 to 99, solvable in under 10 seconds.\n\n' +
       'Then write three taunts of one short sentence each: "intro" greeting the player, "wrong" for a wrong answer, "solved" for when a lock opens.\n\n' +
       'Reply with JSON only, in exactly this shape: ' +
       '{"riddle":{"index":0,"question":"..."},"math":{"question":"...","expression":"..."},"lines":{"intro":"...","wrong":"...","solved":"..."}}',

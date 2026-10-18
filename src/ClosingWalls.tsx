@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { SCREEN_BLEED } from './theme';
 
-const START_SEC = 60; // the walls begin closing in with this much time left
+const DEFAULT_START_SEC = 60; // the walls begin closing in with this much time left
 const MAX_BORDER = 70;
 
 // A dark frame that thickens, and flickers like a dying candle, as the timer runs down.
-export default function ClosingWalls({ remaining }: { remaining: number }) {
+export default function ClosingWalls({ remaining, startSec = DEFAULT_START_SEC }: { remaining: number; startSec?: number }) {
   const flicker = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function ClosingWalls({ remaining }: { remaining: number }) {
     return () => loop.stop();
   }, [flicker]);
 
-  const closeness = Math.max(0, Math.min(1, (START_SEC - remaining) / START_SEC));
+  const closeness = Math.max(0, Math.min(1, (startSec - remaining) / startSec));
   if (closeness === 0) return null;
   return (
     <Animated.View

@@ -1,4 +1,7 @@
-export const LEVEL_LIMITS = { 1: 180, 2: 30, 3: 90 } as const;
+// Level 1 has two locks, each on its own 15s timer; the level limit is their sum.
+export const LEVEL1_LOCK_LIMIT = 15;
+export const LEVEL1_LOCK_COUNT = 2;
+export const LEVEL_LIMITS = { 1: LEVEL1_LOCK_LIMIT * LEVEL1_LOCK_COUNT, 2: 30, 3: 90 } as const;
 // 60s for the one object, then 30s for the selfie.
 export const LEVEL3_ITEM_LIMITS = [60, 30];
 export const MIN_LEVEL_POINTS = 100;

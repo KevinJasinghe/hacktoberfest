@@ -8,7 +8,7 @@ export function formatTime(sec: number) {
 
 export default function TimerBar({ remaining, limit, label, paused }: { remaining: number; limit: number; label?: string; paused?: boolean }) {
   const frac = Math.max(0, Math.min(1, remaining / limit));
-  const urgent = remaining <= 10;
+  const urgent = remaining <= Math.min(10, limit / 3);
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>

@@ -14,7 +14,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 3 | Gemma client and mocks | Built (`src/gemma.ts`, `src/mocks.ts`). Real calls untested: **the key's AI Studio project has no credits (HTTP 402)**, so the app uses mocks for now |
 | 4 | Level 2: drawing | Built: Skia finger drawing, Clear/Submit, Gemma score (mock for now), redraw on 75 or below. Jumpscare on failure comes in step 6. **Needs a phone check** |
 | 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
-| 6 | Jumpscares, music, loader | Not started |
+| 6 | Jumpscares, music, loader | Built: jumpscare pop-up and sound on every timeout, failed drawing and failed photo, 1–2 random scares per run, looping music, Lottie skull loader. **Needs a phone check** |
 | 7 | Firebase auth, saving runs, leaderboard | Not started. **Needs the Firebase project** |
 | 8 | Level 1: puzzles | Not started |
 | 9 | Polish the full run | Not started |
@@ -29,7 +29,7 @@ Update this table as steps land.
 
 ## Open to-dos (blocking)
 
-- [ ] **Skull animation:** download a skull from https://lottiefiles.com/free-animations/skull as **Lottie JSON** (not dotLottie). Save it as `assets/lottie/skull.json` and add its name, creator and URL to `CREDITS.md`. Until then the loader uses a placeholder.
+- [ ] **Skull animation (optional):** `assets/lottie/skull.json` is a simple hand-made skull. To use a nicer one, download a skull from https://lottiefiles.com/free-animations/skull as **Lottie JSON** (not dotLottie), overwrite that file, and update its row in `CREDITS.md`.
 - [ ] **Firebase project:**
   1. Create the project.
   2. Under Authentication, turn on **Email/Password**.

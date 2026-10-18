@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import Level1 from './Level1';
 import Level2 from './Level2';
 import Level3 from './Level3';
+import { useJumpscare, useRandomScares } from './Jumpscare';
 import { LevelProps } from './levels';
 import { LEVEL_LIMITS, levelPoints, totalScore } from './scoring';
 import { ui } from './theme';
@@ -26,6 +27,8 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
   const [points, setPoints] = useState<number[]>([]);
   const [timeouts, setTimeouts] = useState(0);
   const level3Objects = useRef<string[] | null>(null); // kept across Level 3 resets
+  const { scare } = useJumpscare();
+  useRandomScares();
 
   const addTime = (spent: number) => {
     const next = [...times];
@@ -54,6 +57,7 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
   };
 
   const onTimeout = (spent: number) => {
+    scare();
     addTime(spent);
     setTimeouts(timeouts + 1);
     setAttempt(attempt + 1);

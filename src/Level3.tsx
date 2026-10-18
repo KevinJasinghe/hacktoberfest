@@ -3,6 +3,7 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { checkPhoto, pickObjects } from './gemma';
+import { useJumpscare } from './Jumpscare';
 import { LevelProps } from './levels';
 import Loader from './Loader';
 import { LEVEL3_ITEM_LIMITS } from './scoring';
@@ -66,6 +67,7 @@ function CameraStep({ step, target, onPass, onTimeout }: { step: number; target:
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(false);
   const [comment, setComment] = useState('');
+  const { scare } = useJumpscare();
   const t = useCountdown(limit, { paused: !ready || checking, onExpire: () => onTimeout(limit) });
   const isSelfie = target === null;
 
@@ -80,6 +82,7 @@ function CameraStep({ step, target, onPass, onTimeout }: { step: number; target:
       const small = await (await ctx.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.6, base64: true });
       const result = await checkPhoto(small.base64 ?? '', target);
       if (result.match) return onPass(t.remaining, t.elapsed);
+      scare();
       setComment(result.comment || `That is not a ${target}.`);
     } catch (e) {
       setComment('The camera blinked. Try again.');
@@ -112,8 +115,10 @@ function CameraStep({ step, target, onPass, onTimeout }: { step: number; target:
 // Something appears behind the player at a random moment on the selfie camera.
 function SelfieScare() {
   const opacity = useRef(new Animated.Value(0)).current;
+  const { playGhost } = useJumpscare();
   useEffect(() => {
     const delay = 3000 + Math.random() * 9000;
+    const sound = setTimeout(playGhost, delay);
     const anim = Animated.sequence([
       Animated.delay(delay),
       Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
@@ -121,7 +126,10 @@ function SelfieScare() {
       Animated.timing(opacity, { toValue: 0.25, duration: 1500, useNativeDriver: true }),
     ]);
     anim.start();
-    return () => anim.stop();
+    return () => {
+      anim.stop();
+      clearTimeout(sound);
+    };
   }, []);
   return (
     <Animated.View pointerEvents="none" style={[styles.scare, { opacity }]}>

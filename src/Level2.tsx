@@ -2,6 +2,7 @@ import { Canvas, Fill, ImageFormat, Path, Skia, SkPath, useCanvasRef } from '@sh
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { drawingPrompt, scoreDrawing } from './gemma';
+import { useJumpscare } from './Jumpscare';
 import { LevelProps } from './levels';
 import Loader from './Loader';
 import { LEVEL_LIMITS } from './scoring';
@@ -20,6 +21,7 @@ export default function Level2({ onClear, onTimeout }: LevelProps) {
   const [strokes, setStrokes] = useState<SkPath[]>([]);
   const drawing = useRef(false);
   const canvasRef = useCanvasRef();
+  const { scare } = useJumpscare();
 
   const t = useCountdown(LIMIT, { paused: !prompt || scoring, onExpire: () => onTimeout(LIMIT) });
 
@@ -55,7 +57,10 @@ export default function Level2({ onClear, onTimeout }: LevelProps) {
     setScoring(false);
     setVerdict(result);
     if (result.score > PASS_SCORE) onClear(t.remaining, t.elapsed);
-    else clear();
+    else {
+      scare();
+      clear();
+    }
   };
 
   if (!prompt) return <Loader text="The spirit is deciding what you must draw..." />;

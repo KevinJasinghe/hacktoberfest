@@ -1,11 +1,14 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import LottieView from 'lottie-react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors } from './theme';
 
-// Shown for every loading state. The Lottie skull replaces the spinner in step 6.
+export const SKULL = require('../assets/lottie/skull.json');
+
+// Shown for every loading state, including every wait on Gemma.
 export default function Loader({ text }: { text: string }) {
   return (
     <View style={styles.wrap}>
-      <ActivityIndicator size="large" color={colors.blood} />
+      <LottieView source={SKULL} autoPlay loop style={styles.skull} />
       <Text style={styles.text}>{text}</Text>
     </View>
   );
@@ -13,5 +16,6 @@ export default function Loader({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center', padding: 24 },
-  text: { color: colors.dim, fontStyle: 'italic', marginTop: 12, textAlign: 'center' },
+  skull: { width: 120, height: 120 },
+  text: { color: colors.dim, fontStyle: 'italic', marginTop: 8, textAlign: 'center' },
 });

@@ -16,4 +16,4 @@ All third-party assets used in the app and their licenses.
 
 | File | Asset | Author | License | Source |
 |------|-------|--------|---------|--------|
-| `assets/lottie/skull.json` | TBD | TBD | TBD | TBD |
+| `assets/lottie/skull.json` | Pulsing skull | Original, made for this project | Ours | — |

@@ -152,8 +152,9 @@ export function checkPhoto(imageBase64: string, objectName: string): Promise<Pho
     'checkPhoto',
     async () => {
       const r = (await ask(
-        `The player was told to photograph a ${objectName}. Does this photo clearly show a ${objectName}? ` +
-          'Be fair: any real example of it counts, even partly visible. Add a one-sentence comment, taunting if they failed. ' +
+        `The player was told to photograph ${objectName}. Does this photo clearly show it? ` +
+          'Be fair: a real example counts even if it is partly visible, angled, or sharing the frame. ' +
+          'Reject the wrong object, an empty room, and a picture of a screen. Add a one-sentence comment, taunting if they failed. ' +
           'Format: {"match":true|false,"comment":"..."}',
         imageBase64,
       )) as { match?: unknown; comment?: unknown };

@@ -8,7 +8,7 @@ import { colors } from './theme';
 const SCARE_MS = 1800;
 const SCARE_LINES = ['GET OUT', 'I SEE YOU', 'TOO SLOW', 'YOU ARE MINE', 'BEHIND YOU'];
 
-type Jumpscare = { scare: () => void; playGhost: () => void };
+type Jumpscare = { scare: (line?: string) => void; playGhost: () => void };
 const Ctx = createContext<Jumpscare>({ scare: () => {}, playGhost: () => {} });
 export const useJumpscare = () => useContext(Ctx);
 
@@ -29,9 +29,9 @@ export function JumpscareProvider({ children }: { children: ReactNode }) {
     p.play();
   };
 
-  const scare = () => {
+  const scare = (line?: string) => {
     play(sounds[Math.floor(Math.random() * sounds.length)]);
-    setLine(SCARE_LINES[Math.floor(Math.random() * SCARE_LINES.length)]);
+    setLine(line ?? SCARE_LINES[Math.floor(Math.random() * SCARE_LINES.length)]);
     shake.setValue(0);
     Animated.loop(
       Animated.sequence([

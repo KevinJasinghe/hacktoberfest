@@ -1,9 +1,15 @@
 import { Pressable, Text, View } from 'react-native';
 import { ui } from './theme';
 
-type Props = { name?: string | null; onStart: () => void; onLeaderboard?: () => void; onSignOut?: () => void };
+type Props = {
+  name?: string | null;
+  onStart: () => void;
+  onTestLevel3?: () => void;
+  onLeaderboard?: () => void;
+  onSignOut?: () => void;
+};
 
-export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut }: Props) {
+export default function MenuScreen({ name, onStart, onTestLevel3, onLeaderboard, onSignOut }: Props) {
   return (
     <View style={ui.center}>
       <Text style={ui.title}>HAUNTED ESCAPE</Text>
@@ -13,6 +19,11 @@ export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut }: 
       <Pressable style={[ui.button, { alignSelf: 'stretch' }]} onPress={onStart}>
         <Text style={ui.buttonText}>ENTER THE HOUSE</Text>
       </Pressable>
+      {onTestLevel3 && (
+        <Pressable style={[ui.buttonGhost, { alignSelf: 'stretch' }]} onPress={onTestLevel3}>
+          <Text style={ui.buttonText}>SKIP TO LEVEL 3</Text>
+        </Pressable>
+      )}
       {onLeaderboard && (
         <Pressable style={[ui.buttonGhost, { alignSelf: 'stretch' }]} onPress={onLeaderboard}>
           <Text style={ui.buttonText}>LEADERBOARD</Text>

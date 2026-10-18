@@ -1,7 +1,7 @@
 // Run with: node --test src/scoring.test.ts
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compareRuns, levelPoints, totalScore } from './scoring.ts';
+import { compareRuns, LEVEL3_ITEM_LIMITS, LEVEL_LIMITS, levelPoints, totalScore } from './scoring.ts';
 
 test('full time remaining earns 1000', () => {
   assert.equal(levelPoints(180, 180), 1000);
@@ -17,9 +17,11 @@ test('clearing with little time left still earns the 100 minimum', () => {
   assert.equal(levelPoints(0, 180), 100);
 });
 
-test('level 3 uses the summed item time out of 150', () => {
-  // 40s left on object 1, 30s on object 2, 5s on the selfie
-  assert.equal(levelPoints(40 + 30 + 5, 150), 500);
+test('level 3 uses the summed time left on each item', () => {
+  const limit = LEVEL3_ITEM_LIMITS.reduce((a, b) => a + b, 0);
+  assert.equal(LEVEL_LIMITS[3], limit);
+  // 40s, 30s and 25s left on the three objects, 10s on the selfie
+  assert.equal(levelPoints(40 + 30 + 25 + 10, limit), 500);
 });
 
 test('timeouts cost 250 each', () => {

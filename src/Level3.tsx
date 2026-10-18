@@ -1,9 +1,9 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import LottieView from 'lottie-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { checkPhoto } from './gemma';
+import { checkPhoto, pickObjects } from './gemma';
 import { useJumpscare } from './Jumpscare';
 import { LevelProps } from './levels';
 import Loader, { SKULL } from './Loader';
@@ -12,23 +12,21 @@ import TimerBar from './TimerBar';
 import { colors, ui } from './theme';
 import { useCountdown } from './useCountdown';
 
-// Level 3: climb a stone hall, then photograph three things at the hackathon
-// (pumpkin, balloons with drawings, a laptop) and finish with a selfie.
-// Gemma checks each object. A wrong photo jumpscares and restarts the whole game.
+// Level 3: climb a stone hall, then photograph 3 objects Gemma picks and finish with a selfie.
+// The objects are common enough to be in the room, with a Halloween theme.
+// Gemma checks each photo. A wrong photo jumpscares and restarts the whole game.
 // The selfie is not checked. A skeleton, ghost, or doll lurks in that shot.
-type Props = LevelProps & { onWrong: () => void };
+type Props = LevelProps & { onWrong: () => void; objectsRef: MutableRefObject<string[] | null> };
 
 type Target = { label: string; title: string; gemma: string };
 
-const TARGETS: Target[] = [
-  { label: 'Pumpkin', title: 'Photograph the pumpkin.', gemma: 'a real pumpkin or jack-o-lantern' },
-  {
-    label: 'Balloons',
-    title: 'Photograph the balloons with drawings.',
-    gemma: 'balloons with drawings or faces on them. Plain balloons still count if a drawing is too dark to see. A photo with no balloons does not count',
-  },
-  { label: 'Laptop', title: 'Photograph a laptop.', gemma: 'a real laptop computer, open or closed. A phone does not count' },
-];
+const article = (name: string) => ('aeiou'.includes(name[0]) ? 'an' : 'a');
+const titleCase = (name: string) => name.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+
+function toTarget(name: string): Target {
+  const word = article(name);
+  return { label: titleCase(name), title: `Photograph ${word} ${name}.`, gemma: `${word} real ${name}` };
+}
 
 const HALL_LINES = [
   'You step into the dark stone hall.',
@@ -40,12 +38,26 @@ const HALL_LINES = [
 type CreatureKind = 'skeleton' | 'ghost' | 'doll';
 const CREATURES: CreatureKind[] = ['skeleton', 'ghost', 'doll'];
 
-export default function Level3({ onClear, onTimeout, onWrong }: Props) {
+export default function Level3({ onClear, onTimeout, onWrong, objectsRef }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
+  const [objects, setObjects] = useState<string[] | null>(objectsRef.current);
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<'hall' | 'camera'>('hall');
   const left = useRef(0);
   const spent = useRef(0);
+
+  useEffect(() => {
+    if (objectsRef.current) return;
+    let cancelled = false;
+    pickObjects(3).then((picked) => {
+      if (cancelled) return;
+      objectsRef.current = picked;
+      setObjects(picked);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [objectsRef]);
 
   if (!permission) return <Loader text="Something waits at the top of the stairs..." />;
   if (!permission.granted) {
@@ -81,11 +93,15 @@ export default function Level3({ onClear, onTimeout, onWrong }: Props) {
     );
   }
 
+  if (!objects) return <Loader text="The spirit is choosing what you must find..." />;
+  const targets = objects.map(toTarget);
+
   return (
     <CameraStep
       key={step}
       step={step}
-      target={step < TARGETS.length ? TARGETS[step] : null}
+      target={step < targets.length ? targets[step] : null}
+      objectCount={targets.length}
       onPass={clearStep}
       onWrong={onWrong}
       onTimeout={(stepSpent) => onTimeout(spent.current + stepSpent)}
@@ -199,12 +215,14 @@ function Torch({ flicker, side }: { flicker: Animated.Value; side: 'left' | 'rig
 function CameraStep({
   step,
   target,
+  objectCount,
   onPass,
   onWrong,
   onTimeout,
 }: {
   step: number;
   target: Target | null;
+  objectCount: number;
   onPass: (remaining: number, spent: number) => void;
   onWrong: () => void;
   onTimeout: (spent: number) => void;
@@ -262,7 +280,7 @@ function CameraStep({
     setChecking(false);
   };
 
-  const label = isSelfie ? 'Selfie' : `${target.label} · ${step + 1} of ${TARGETS.length}`;
+  const label = isSelfie ? 'Selfie' : `${target.label} · ${step + 1} of ${objectCount}`;
   const heading = revealed ? 'It was behind you.' : isSelfie ? 'Now show me your face.' : target.title;
 
   return (

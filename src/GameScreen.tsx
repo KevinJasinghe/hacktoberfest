@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Level1 from './Level1';
 import Level2 from './Level2';
@@ -32,6 +32,7 @@ export default function GameScreen({
   const [times, setTimes] = useState([0, 0, 0]);
   const [points, setPoints] = useState<number[]>(() => Array(startLevel).fill(0));
   const [timeouts, setTimeouts] = useState(0);
+  const level3Objects = useRef<string[] | null>(null); // kept across a Level 3 timeout, cleared when the run restarts
   const { scare } = useJumpscare();
   useRandomScares();
 
@@ -70,6 +71,7 @@ export default function GameScreen({
 
   // A wrong Level 3 photo sends the player back to Level 1 with a fresh score.
   const restartRun = () => {
+    level3Objects.current = null;
     setLevel(0);
     setAttempt(attempt + 1);
     setTimes([0, 0, 0]);
@@ -90,7 +92,7 @@ export default function GameScreen({
     <View style={ui.screen}>
       {level === 0 && <Level1 key={key} {...props} />}
       {level === 1 && <Level2 key={key} {...props} />}
-      {level === 2 && <Level3 key={key} {...props} onWrong={restartRun} />}
+      {level === 2 && <Level3 key={key} {...props} onWrong={restartRun} objectsRef={level3Objects} />}
       {__DEV__ && level < LAST_LEVEL && (
         <Pressable
           onPress={skipLevel}

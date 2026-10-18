@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useAudio } from './audio';
 import * as haptics from './haptics';
 import { useJumpscare } from './Jumpscare';
 import type { Beat } from './story';
@@ -23,7 +24,8 @@ const speakerName = (b: Beat) => (b.who === 'ghost' ? 'THE KEEPER' : b.who === '
 // tap again for the next one; the last tap hands control back. The caller pauses its timer meanwhile.
 export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: () => void }) {
   const { width, height } = useWindowDimensions();
-  const { playGhost } = useJumpscare();
+  const { playGhost, playScare } = useJumpscare();
+  const { sfx } = useAudio();
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false); // current line fully typed
   const [skipToken, setSkipToken] = useState(0);
@@ -63,8 +65,10 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
         Animated.timing(dark, { toValue: 0, duration: 600, useNativeDriver: true }),
       ]).start();
     }
+    if (beat.sfx) sfx(beat.sfx);
     if (beat.fx === 'lunge') {
       haptics.scare();
+      playScare();
       flash.setValue(0.55);
       Animated.timing(flash, { toValue: 0, duration: 500, useNativeDriver: true }).start();
     }

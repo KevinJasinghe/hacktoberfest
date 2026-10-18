@@ -1,8 +1,8 @@
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import { StatusBar } from 'expo-status-bar';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { AudioProvider } from './src/audio';
 import AuthScreen from './src/AuthScreen';
 import { auth, firebaseEnabled } from './src/firebase';
 import GameScreen, { RunResult } from './src/GameScreen';
@@ -19,15 +19,6 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'menu' });
   // undefined = still checking for a saved login
   const [user, setUser] = useState<User | null | undefined>(firebaseEnabled ? undefined : null);
-  const music = useAudioPlayer(require('./assets/audio/music.mp3'));
-
-  // Scary music loops for the whole session, even with the iPhone's silent switch on.
-  useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true });
-    music.loop = true;
-    music.volume = 0.5;
-    music.play();
-  }, [music]);
 
   useEffect(() => (auth ? onAuthStateChanged(auth, setUser) : undefined), []);
 
@@ -50,9 +41,11 @@ export default function App() {
     );
 
   return (
-    <JumpscareProvider>
-      {content}
-      <StatusBar style="light" />
-    </JumpscareProvider>
+    <AudioProvider>
+      <JumpscareProvider>
+        {content}
+        <StatusBar style="light" />
+      </JumpscareProvider>
+    </AudioProvider>
   );
 }

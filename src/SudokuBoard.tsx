@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useAudio } from './audio';
 import * as haptics from './haptics';
 import { conflicts, Sudoku } from './sudoku';
 import { colors } from './theme';
@@ -19,6 +20,7 @@ const box = (i: number) => Math.floor(row(i) / 2) * 2 + Math.floor(col(i) / 2);
 export default function SudokuBoard({ sudoku, onSolved, hintSignal }: Props) {
   const { puzzle, solution } = sudoku;
   const { width } = useWindowDimensions();
+  const { sfx } = useAudio();
   const cellSize = Math.min(78, Math.floor((width - SCREEN_PADDING - PANEL_PADDING * 2 - 6) / 4));
   const [cells, setCells] = useState(puzzle);
   const [selected, setSelected] = useState<number | null>(null);
@@ -27,6 +29,7 @@ export default function SudokuBoard({ sudoku, onSolved, hintSignal }: Props) {
 
   const place = (i: number, n: number) => {
     haptics.tap();
+    sfx('place', 0.5);
     const next = [...cells];
     next[i] = n;
     setCells(next);

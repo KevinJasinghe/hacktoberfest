@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAudio } from './audio';
 import * as haptics from './haptics';
 import { colors } from './theme';
 
@@ -6,6 +7,7 @@ const ROWS = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['⌫', '0', '�
 
 // On-screen keypad so number answers never open the keyboard. Keys: '0'-'9', '⌫' (backspace), '↵' (submit).
 export default function NumberPad({ onKey }: { onKey: (key: string) => void }) {
+  const { sfx } = useAudio();
   return (
     <View style={styles.pad}>
       {ROWS.map((row) => (
@@ -16,6 +18,7 @@ export default function NumberPad({ onKey }: { onKey: (key: string) => void }) {
               style={({ pressed }) => [styles.key, pressed && styles.pressed]}
               onPress={() => {
                 haptics.tap();
+                sfx('place', 0.5);
                 onKey(k);
               }}
             >

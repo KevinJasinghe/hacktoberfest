@@ -158,6 +158,7 @@ assets/lottie/skull.json
 - **Hint button** costs 15 s: a Gemma hint for locks 1-2, one revealed cell for the sudoku.
 - A wrong answer shakes the input and flashes red. A dark "closing walls" frame (`src/ClosingWalls.tsx`) tightens and flickers over the last 60 s.
 - **Story cutscenes** (`src/StoryScene.tsx`): a 4-beat intro (first attempt only) and a 3-beat scene after each lock (the last one leads into Level 2), with the Keeper ghost, a skeleton prisoner, typed dialogue and a skull that appears on the door. The timer is paused during scenes. The story is fixed on purpose (`src/story.ts`), so each beat can name its character, mood, backdrop (`bg`, drawn in `src/SceneBackground.tsx`) and effect (`lunge`, `blackout`); don't generate it with Gemma.
+- **Audio** (`src/audio.tsx`): `useAudio()` gives `music(track)` (crossfades between `main`, `tense` for puzzles and `dungeon` for story scenes) and `sfx(name)` (lock open, wrong answer, hint, creak, door open, chain, heartbeat, soft knock on key presses). Story beats can name a sound with `sfx`, and lunges play a jumpscare sound. Levels 2 and 3 keep the `main` loop and can use `sfx` too.
 - A tiled, darkened brick wall (`src/CellarBackground.tsx`, CC0 texture credited in `CREDITS.md`) sits behind all of Level 1.
 - **Timeout:** jumpscare, −250, and a fresh riddle, math puzzle and sudoku.
 

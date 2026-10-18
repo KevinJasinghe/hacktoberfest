@@ -9,8 +9,8 @@ import { colors } from './theme';
 const SCARE_MS = 1800;
 const SCARE_LINES = ['GET OUT', 'I SEE YOU', 'TOO SLOW', 'YOU ARE MINE', 'BEHIND YOU'];
 
-type Jumpscare = { scare: () => void; playGhost: () => void };
-const Ctx = createContext<Jumpscare>({ scare: () => {}, playGhost: () => {} });
+type Jumpscare = { scare: () => void; playGhost: () => void; playScare: () => void };
+const Ctx = createContext<Jumpscare>({ scare: () => {}, playGhost: () => {}, playScare: () => {} });
 export const useJumpscare = () => useContext(Ctx);
 
 // Full-screen pop-up plus a sound. It closes on its own; game timers keep running underneath.
@@ -30,9 +30,11 @@ export function JumpscareProvider({ children }: { children: ReactNode }) {
     p.play();
   };
 
+  const playScare = () => play(sounds[Math.floor(Math.random() * sounds.length)]);
+
   const scare = () => {
     haptics.scare();
-    play(sounds[Math.floor(Math.random() * sounds.length)]);
+    playScare();
     setLine(SCARE_LINES[Math.floor(Math.random() * SCARE_LINES.length)]);
     shake.setValue(0);
     Animated.loop(
@@ -50,7 +52,7 @@ export function JumpscareProvider({ children }: { children: ReactNode }) {
 
   const translateX = shake.interpolate({ inputRange: [-1, 1], outputRange: [-14, 14] });
   return (
-    <Ctx.Provider value={{ scare, playGhost: () => play(ghost) }}>
+    <Ctx.Provider value={{ scare, playGhost: () => play(ghost), playScare }}>
       {children}
       {line && (
         <Animated.View style={[styles.scare, { transform: [{ translateX }] }]}>

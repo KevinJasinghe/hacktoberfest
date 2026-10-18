@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { isCorrect } from './answers';
+import { useAudio } from './audio';
 import ClosingWalls from './ClosingWalls';
 import { Cellar, generatePuzzles } from './gemma';
 import * as haptics from './haptics';
-import { useJumpscare } from './Jumpscare';
 import { LevelProps } from './levels';
 import Loader from './Loader';
 import NumberPad from './NumberPad';
@@ -36,7 +36,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | 'lock2' | null>(attempt === 0 ? 'intro' : null);
   const shake = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(0)).current;
-  const { playGhost } = useJumpscare();
+  const { music, sfx } = useAudio();
   const t = useCountdown(LIMIT, { paused: !cellar || !!scene, onExpire: () => onTimeout(LIMIT) });
 
   useEffect(() => {
@@ -46,10 +46,19 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
     });
   }, []);
 
-  // Heartbeat buzz once a second while the clock is nearly out.
+  // Story scenes get the dungeon track, puzzles get the tense one; leaving the level restores the main loop.
+  useEffect(() => {
+    music(scene ? 'dungeon' : 'tense');
+  }, [scene]);
+  useEffect(() => () => music('main'), []);
+
+  // Heartbeat (buzz and sound) once a second while the clock is nearly out.
   const secondsLeft = Math.ceil(t.remaining);
   useEffect(() => {
-    if (cellar && !scene && secondsLeft > 0 && secondsLeft <= 10) haptics.heartbeat();
+    if (cellar && !scene && secondsLeft > 0 && secondsLeft <= 10) {
+      haptics.heartbeat();
+      sfx('heartbeat', 0.8);
+    }
   }, [secondsLeft, cellar, scene]);
 
   if (!cellar) return <Loader text="The spirit is bolting three locks onto the cellar door..." />;
@@ -58,7 +67,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
 
   const openLock = (skipped = false) => {
     if (skipped && !__DEV__) return; // the skip path must never exist in a production build
-    playGhost();
+    sfx('lockOpen');
     haptics.lockOpen();
     setGuess('');
     setHint(null);
@@ -72,6 +81,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
 
   const wrongAnswer = () => {
     haptics.wrong();
+    sfx('wrong');
     setSpirit(cellar.lines.wrong);
     Animated.sequence(
       [12, -12, 8, -8, 0].map((toValue) => Animated.timing(shake, { toValue, duration: 50, useNativeDriver: true })),
@@ -89,6 +99,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const useHint = () => {
     if (!canHint) return;
     haptics.warn();
+    sfx('hint');
     t.penalize(HINT_COST);
     if (puzzle) setHint(puzzle.hint);
     else setHintSignal(hintSignal + 1);

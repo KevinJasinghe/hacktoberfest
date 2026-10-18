@@ -53,6 +53,7 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
   const canHint = t.remaining > HINT_COST && (lock === 2 || !hint);
 
   const openLock = (skipped = false) => {
+    if (skipped && !__DEV__) return; // the skip path must never exist in a production build
     if (!skipped) {
       playGhost();
       haptics.lockOpen();
@@ -149,9 +150,11 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
             {lock === 2 ? 'REVEAL A CELL' : 'HINT'} (-{HINT_COST}s)
           </Text>
         </Pressable>
-        <Pressable style={styles.skip} onPress={() => openLock(true)}>
-          <Text style={styles.skipText}>SKIP PUZZLE (dev)</Text>
-        </Pressable>
+        {__DEV__ && (
+          <Pressable style={styles.skip} onPress={() => openLock(true)}>
+            <Text style={styles.skipText}>SKIP PUZZLE (dev)</Text>
+          </Pressable>
+        )}
       </ScrollView>
       <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
       <ClosingWalls remaining={t.remaining} />

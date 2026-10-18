@@ -160,7 +160,7 @@ assets/lottie/skull.json
 - A tiled, darkened brick wall (`src/CellarBackground.tsx`, CC0 texture credited in `CREDITS.md`) sits behind all of Level 1.
 - **Timeout:** jumpscare, −250, and a fresh riddle and math puzzle.
 
-### Level 2: drawing (3:00)
+### Level 2: drawing (0:30)
 - Gemma gives a spooky drawing prompt.
 - The player draws on the Skia canvas, with Clear and Submit buttons.
 - On Submit, Gemma scores the drawing. The timer pauses and the loader shows.

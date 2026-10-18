@@ -13,7 +13,11 @@ import MenuScreen from './src/MenuScreen';
 import ResultsScreen from './src/ResultsScreen';
 import { ui } from './src/theme';
 
-type Screen = { name: 'menu' } | { name: 'game' } | { name: 'results'; result: RunResult } | { name: 'leaderboard' };
+type Screen =
+  | { name: 'menu' }
+  | { name: 'game'; startLevel?: number }
+  | { name: 'results'; result: RunResult }
+  | { name: 'leaderboard' };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'menu' });
@@ -29,7 +33,10 @@ export default function App() {
   let content;
   if (user === undefined) content = <View style={ui.center}><Loader text="The house remembers you..." /></View>;
   else if (firebaseEnabled && !user && !guest) content = <AuthScreen onSkip={__DEV__ ? () => setGuest(true) : undefined} />;
-  else if (screen.name === 'game') content = <GameScreen onFinish={(result) => setScreen({ name: 'results', result })} />;
+  else if (screen.name === 'game')
+    content = (
+      <GameScreen startLevel={screen.startLevel} onFinish={(result) => setScreen({ name: 'results', result })} />
+    );
   else if (screen.name === 'results') content = <ResultsScreen result={screen.result} user={user} onDone={menu} />;
   else if (screen.name === 'leaderboard') content = <LeaderboardScreen uid={user?.uid} onBack={menu} />;
   else
@@ -37,6 +44,7 @@ export default function App() {
       <MenuScreen
         name={user?.displayName}
         onStart={() => setScreen({ name: 'game' })}
+        onTestLevel3={__DEV__ ? () => setScreen({ name: 'game', startLevel: 2 }) : undefined}
         onLeaderboard={firebaseEnabled ? () => setScreen({ name: 'leaderboard' }) : undefined}
         onSignOut={auth ? () => (user ? signOut(auth!) : setGuest(false)) : undefined}
         signOutLabel={user ? 'Sign out' : 'Log in'}

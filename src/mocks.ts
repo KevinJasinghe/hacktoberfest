@@ -14,15 +14,28 @@ const MATH: Puzzle[] = [
 ];
 
 const PROMPTS = [
-  'A ghost peeking out of a closet',
-  'A haunted house on a hill',
-  'A jack-o-lantern with a crooked grin',
-  'A bat flying past a full moon',
-  'A skeleton hand rising from a grave',
-  'A spider hanging from its web',
+  'a ghost',
+  'a bat',
+  'a pumpkin',
+  'a skull',
+  'a spider',
+  'a moon',
+  'a black cat',
+  'an eye',
 ];
 
-const OBJECTS = ['spoon', 'key', 'candle', 'scissors', 'sock', 'flashlight', 'mug', 'book', 'toothbrush', 'pen'];
+const PASS_LINES = [
+  'Okay, that actually slaps. I hate that it slaps.',
+  'Not bad. Frame it. Next to the other things I have to live with.',
+  'Passable. Truly the "mid but acceptable" of drawings.',
+];
+const FAIL_LINES = [
+  'Bro really said "that is a ghost" with a straight face. Skill issue.',
+  'I have seen better art on a cursed gravestone. Ratio.',
+  'This is fine. Everything is fine. The drawing is not fine.',
+];
+
+const OBJECTS = ['pumpkin', 'balloons', 'candle', 'candy', 'plastic spider', 'paper bat', 'jack-o-lantern'];
 
 export const mocks = {
   // One riddle (from the vetted bank) then one math puzzle, plus the spirit's lines.
@@ -44,8 +57,8 @@ export const mocks = {
   // Random so both the pass and fail paths get exercised.
   scoreDrawing: (): DrawingScore => {
     const score = 55 + Math.floor(Math.random() * 41);
-    return { score, comment: score > 75 ? 'Fine. You may pass... for now.' : 'Pathetic. Again.' };
+    return { score, comment: pick(score > 75 ? PASS_LINES : FAIL_LINES) };
   },
-  pickObjects: (): string[] => shuffle(OBJECTS).slice(0, 2),
+  pickObjects: (count = 1): string[] => shuffle(OBJECTS).slice(0, count),
   checkPhoto: (): PhotoCheck => ({ match: true, comment: 'It will do.' }),
 };

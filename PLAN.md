@@ -9,8 +9,8 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 
 | # | Step | Status |
 |---|------|--------|
-| 1 | Scaffold, install packages, confirm the app opens in Expo Go | Built and committed. **Waiting on the phone check** (see Setup) |
-| 2 | Game shell on mock responses | Not started (scoring is already done) |
+| 1 | Scaffold, install packages, confirm the app opens in Expo Go | Done (opens in Expo Go on SDK 57) |
+| 2 | Game shell on mock responses | Built: menu → 3 placeholder levels → results, with timers, resets and scoring. **Needs a phone check** |
 | 3 | Gemma client and mocks | Not started |
 | 4 | Level 2: drawing | Not started |
 | 5 | Level 3: camera hunt | Not started |
@@ -36,16 +36,15 @@ Update this table as steps land.
   3. Create a **Firestore** database in **test mode**.
   4. Add a **Web app** and copy its config into the `EXPO_PUBLIC_FIREBASE_*` keys in `.env`.
 - [ ] **Gemma key:** paste the Google AI Studio key into `EXPO_PUBLIC_GEMMA_API_KEY` in `.env`.
-- [ ] **Phone check for step 1:** open the app on an iPhone in Expo Go (see Setup).
 - [ ] **Demo plan:** to be written later (PRD section 10).
 
 ## Setup (for anyone on the team)
 
-1. `git clone` the repo, then run `npm install`.
+1. `git clone` the repo, then run `npm ci`. After pulling changes to `package-lock.json`, run `npm ci` again so `node_modules` matches.
 2. `cp .env.example .env` and fill in the keys. Get the values from a teammate; **never commit `.env`**.
 3. Start the dev server:
    - **Mac, or Windows without WSL:** run `npx expo start` and scan the QR code with the iPhone camera.
-   - **WSL2:** the default network mode hides the dev server from the phone. Run `npx expo start --tunnel` instead, and accept the one-time `@expo/ngrok` install.
+   - **WSL2:** the default network mode hides the dev server from the phone. Log in once with `npx expo login` (in a normal terminal, since it prompts), then run `npx expo start --tunnel`.
    - **Venue Wi-Fi** often blocks phone-to-laptop traffic, so use `--tunnel` there too.
 4. The phone needs the latest **Expo Go** from the App Store, which must support SDK 57.
 

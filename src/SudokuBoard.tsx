@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as haptics from './haptics';
 import { conflicts, Sudoku } from './sudoku';
 import { colors } from './theme';
 
@@ -15,6 +16,7 @@ export default function SudokuBoard({ sudoku, onSolved, hintSignal }: Props) {
   const bad = conflicts(cells);
 
   const place = (i: number, n: number) => {
+    haptics.tap();
     const next = [...cells];
     next[i] = n;
     setCells(next);
@@ -40,7 +42,10 @@ export default function SudokuBoard({ sudoku, onSolved, hintSignal }: Props) {
             <Pressable
               key={i}
               disabled={given}
-              onPress={() => setSelected(i)}
+              onPress={() => {
+                haptics.select();
+                setSelected(i);
+              }}
               style={[
                 styles.cell,
                 // thicker lines between the 2x2 boxes

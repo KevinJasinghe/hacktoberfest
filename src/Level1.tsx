@@ -3,6 +3,7 @@ import { Animated, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text
 import { isCorrect } from './answers';
 import ClosingWalls from './ClosingWalls';
 import { Cellar, generatePuzzles } from './gemma';
+import * as haptics from './haptics';
 import { useJumpscare } from './Jumpscare';
 import { LevelProps } from './levels';
 import Loader from './Loader';
@@ -41,21 +42,31 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
     });
   }, []);
 
+  // Heartbeat buzz once a second while the clock is nearly out.
+  const secondsLeft = Math.ceil(t.remaining);
+  useEffect(() => {
+    if (cellar && secondsLeft > 0 && secondsLeft <= 10) haptics.heartbeat();
+  }, [secondsLeft, cellar]);
+
   if (!cellar) return <Loader text="The spirit is bolting three locks onto the cellar door..." />;
   const puzzle = lock < 2 ? cellar.puzzles[lock] : null;
   const canHint = t.remaining > HINT_COST && (lock === 2 || !hint);
 
-  const openLock = () => {
-    playGhost();
+  const openLock = (skipped = false) => {
+    if (!skipped) {
+      playGhost();
+      haptics.lockOpen();
+    }
     setGuess('');
     setHint(null);
     if (lock < 2) {
       setLock(lock + 1);
-      setSpirit(cellar.lines.solved);
+      setSpirit(skipped ? cellar.lines.intro : cellar.lines.solved);
     } else onClear(t.remaining, t.elapsed);
   };
 
   const wrongAnswer = () => {
+    haptics.wrong();
     setSpirit(cellar.lines.wrong);
     Animated.sequence(
       [12, -12, 8, -8, 0].map((toValue) => Animated.timing(shake, { toValue, duration: 50, useNativeDriver: true })),
@@ -72,6 +83,7 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
 
   const useHint = () => {
     if (!canHint) return;
+    haptics.warn();
     t.penalize(HINT_COST);
     if (puzzle) setHint(puzzle.hint);
     else setHintSignal(hintSignal + 1);
@@ -129,13 +141,16 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
           </>
         ) : (
           <View style={{ marginTop: 16 }}>
-            <SudokuBoard sudoku={sudoku} onSolved={openLock} hintSignal={hintSignal} />
+            <SudokuBoard sudoku={sudoku} onSolved={() => openLock()} hintSignal={hintSignal} />
           </View>
         )}
         <Pressable style={[ui.buttonGhost, !canHint && { opacity: 0.35 }]} onPress={useHint} disabled={!canHint}>
           <Text style={[ui.buttonText, { color: colors.dim }]}>
             {lock === 2 ? 'REVEAL A CELL' : 'HINT'} (-{HINT_COST}s)
           </Text>
+        </Pressable>
+        <Pressable style={styles.skip} onPress={() => openLock(true)}>
+          <Text style={styles.skipText}>SKIP PUZZLE (dev)</Text>
         </Pressable>
       </ScrollView>
       <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
@@ -152,6 +167,8 @@ const styles = StyleSheet.create({
   question: { marginTop: 12, marginBottom: 20, fontSize: 24, lineHeight: 32 },
   input: { borderWidth: 1, borderColor: colors.blood, borderRadius: 8, color: colors.text, fontSize: 20, padding: 14, backgroundColor: colors.panel },
   display: { borderWidth: 1, borderColor: colors.blood, borderRadius: 8, color: colors.text, fontSize: 32, fontWeight: '800', padding: 12, backgroundColor: colors.panel, textAlign: 'center' },
+  skip: { marginTop: 16, alignItems: 'center', padding: 8 },
+  skipText: { color: colors.dim, fontSize: 13, letterSpacing: 1, textDecorationLine: 'underline' },
   hint: { color: colors.dim, fontStyle: 'italic', marginTop: 10 },
   flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.bloodBright, zIndex: 5 },
 });

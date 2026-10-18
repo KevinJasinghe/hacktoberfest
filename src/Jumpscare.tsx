@@ -2,6 +2,7 @@ import { useAudioPlayer } from 'expo-audio';
 import LottieView from 'lottie-react-native';
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
+import * as haptics from './haptics';
 import { SKULL } from './Loader';
 import { colors } from './theme';
 
@@ -30,6 +31,7 @@ export function JumpscareProvider({ children }: { children: ReactNode }) {
   };
 
   const scare = () => {
+    haptics.scare();
     play(sounds[Math.floor(Math.random() * sounds.length)]);
     setLine(SCARE_LINES[Math.floor(Math.random() * SCARE_LINES.length)]);
     shake.setValue(0);

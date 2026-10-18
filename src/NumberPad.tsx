@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as haptics from './haptics';
 import { colors } from './theme';
 
 const ROWS = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['⌫', '0', '↵']];
@@ -10,7 +11,14 @@ export default function NumberPad({ onKey }: { onKey: (key: string) => void }) {
       {ROWS.map((row) => (
         <View key={row[0]} style={styles.row}>
           {row.map((k) => (
-            <Pressable key={k} style={({ pressed }) => [styles.key, pressed && styles.pressed]} onPress={() => onKey(k)}>
+            <Pressable
+              key={k}
+              style={({ pressed }) => [styles.key, pressed && styles.pressed]}
+              onPress={() => {
+                haptics.tap();
+                onKey(k);
+              }}
+            >
               <Text style={styles.text}>{k}</Text>
             </Pressable>
           ))}

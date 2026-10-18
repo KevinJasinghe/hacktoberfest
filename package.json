@@ -9,6 +9,7 @@
     "expo-asset": "~57.0.20",
     "expo-audio": "~57.0.5",
     "expo-camera": "~57.0.6",
+    "expo-haptics": "~57.0.3",
     "expo-image-manipulator": "~57.0.21",
     "expo-status-bar": "~57.0.1",
     "firebase": "^13.0.0",

@@ -12,7 +12,10 @@ const PERSONA =
   'You are the malevolent spirit haunting a house, acting as dungeon master in a horror escape game. ' +
   'You are cruel and theatrical but keep everything PG-13. ';
 
-export type Puzzle = { type: 'riddle' | 'math'; question: string; answers: string[] };
+export type Puzzle = { type: 'riddle' | 'math'; question: string; answers: string[]; hint: string };
+// What the spirit says during Level 1; shown with a typewriter effect.
+export type SpiritLines = { intro: string; wrong: string; solved: string };
+export type Cellar = { puzzles: Puzzle[]; lines: SpiritLines };
 export type DrawingScore = { score: number; comment: string };
 export type PhotoCheck = { match: boolean; comment: string };
 
@@ -74,26 +77,37 @@ const str = (v: unknown, field: string): string => {
   return v.trim();
 };
 
-export function generatePuzzles(count = 3): Promise<Puzzle[]> {
+// Level 1 content: one riddle and one math puzzle (the third lock is a sudoku the app builds itself).
+export function generatePuzzles(): Promise<Cellar> {
   return withFallback(
     'generatePuzzles',
     async () => {
       const r = (await ask(
-        `Create ${count} short puzzles the player must solve to escape the cellar. Mix riddles and simple mental-math word problems with a spooky theme. ` +
-          'Each must be solvable in under 45 seconds with a one- or two-word answer (math answers are whole numbers). Double-check every answer. ' +
-          'List every acceptable answer, lowercase. ' +
-          `Format: {"puzzles":[{"type":"riddle"|"math","question":"...","answers":["..."]}]} with exactly ${count} items.`,
-      )) as { puzzles?: unknown[] };
+        'The player is locked in your cellar behind a door with three locks. Create the first two locks: exactly one spooky riddle and one simple mental-math word problem with a spooky theme. ' +
+          'Each must be solvable in under 60 seconds with a one- or two-word answer (math answers are whole numbers). Double-check every answer. ' +
+          'List every acceptable answer, lowercase. Give each a short hint that nudges without giving the answer away. ' +
+          'Also write three short taunting lines (one sentence each): "intro" as you greet the player, "wrong" for a wrong answer, "solved" for when a lock opens. ' +
+          'Format: {"puzzles":[{"type":"riddle","question":"...","answers":["..."],"hint":"..."},{"type":"math","question":"...","answers":["..."],"hint":"..."}],' +
+          '"lines":{"intro":"...","wrong":"...","solved":"..."}}',
+      )) as { puzzles?: unknown[]; lines?: Record<string, unknown> };
       const puzzles = (r.puzzles ?? []).map((p) => {
         const q = p as Record<string, unknown>;
         const answers = Array.isArray(q.answers) ? q.answers.map((a) => String(a).trim()).filter(Boolean) : [];
         if (!answers.length) throw new Error('puzzle without answers');
-        return { type: q.type === 'math' ? 'math' : 'riddle', question: str(q.question, 'question'), answers } as Puzzle;
+        return { type: q.type === 'math' ? 'math' : 'riddle', question: str(q.question, 'question'), answers, hint: str(q.hint, 'hint') } as Puzzle;
       });
-      if (puzzles.length < count) throw new Error(`only ${puzzles.length} puzzles`);
-      return puzzles.slice(0, count);
+      if (puzzles.length < 2) throw new Error(`only ${puzzles.length} puzzles`);
+      // Lock 1 is the riddle and lock 2 the math puzzle, whatever order Gemma returned them in.
+      const riddle = puzzles.find((p) => p.type === 'riddle');
+      const math = puzzles.find((p) => p.type === 'math');
+      if (!riddle || !math) throw new Error('need one riddle and one math puzzle');
+      const lines = r.lines ?? {};
+      return {
+        puzzles: [riddle, math],
+        lines: { intro: str(lines.intro, 'intro'), wrong: str(lines.wrong, 'wrong'), solved: str(lines.solved, 'solved') },
+      };
     },
-    () => mocks.puzzles(count),
+    mocks.cellar,
   );
 }
 

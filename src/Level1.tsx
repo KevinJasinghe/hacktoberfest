@@ -33,7 +33,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const [hint, setHint] = useState<string | null>(null);
   const [hintSignal, setHintSignal] = useState(0);
   // Story cutscenes pause the timer. The intro plays on the first try only, not after every timeout.
-  const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | null>(attempt === 0 ? 'intro' : null);
+  const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | 'lock2' | null>(attempt === 0 ? 'intro' : null);
   const shake = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(0)).current;
   const { playGhost } = useJumpscare();
@@ -71,7 +71,8 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
         setSpirit(null);
         setScene(lock === 0 ? 'lock0' : 'lock1');
       }
-    } else onClear(t.remaining, t.elapsed);
+    } else if (skipped) onClear(t.remaining, t.elapsed);
+    else setScene('lock2'); // the closing scene leads into Level 2 and then clears the level
   };
 
   const wrongAnswer = () => {
@@ -105,10 +106,12 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   };
 
   if (scene) {
-    const beats = scene === 'intro' ? STORY.intro : STORY.afterLock[scene === 'lock0' ? 0 : 1];
+    const beats = scene === 'intro' ? STORY.intro : STORY.afterLock[Number(scene.slice(-1))];
+    // The timer is paused during scenes, so clearing after the last one still reports the true time left.
+    const done = () => (scene === 'lock2' ? onClear(t.remaining, t.elapsed) : setScene(null));
     return (
       <KeyboardAvoidingView style={{ flex: 1 }}>
-        <StoryScene key={scene} beats={beats} onDone={() => setScene(null)} />
+        <StoryScene key={scene} beats={beats} onDone={done} />
       </KeyboardAvoidingView>
     );
   }

@@ -34,6 +34,8 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
   const shake = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(1)).current;
   const skull = useRef(new Animated.Value(0)).current;
+  const dark = useRef(new Animated.Value(0)).current; // blackout overlay
+  const flash = useRef(new Animated.Value(0)).current; // red flash on a lunge
   const ghostPlayed = useRef(false);
 
   // Ambient loops: the character bobs, the "candle" flickers.
@@ -54,8 +56,21 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
     enter.setValue(0);
     Animated.timing(enter, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     Animated.timing(skull, { toValue: creepy ? 1 : 0, duration: 700, useNativeDriver: true }).start();
-    if (creepy && beat.who !== 'none') {
+    if (beat.fx === 'blackout') {
       haptics.warn();
+      Animated.sequence([
+        Animated.timing(dark, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.delay(900),
+        Animated.timing(dark, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]).start();
+    }
+    if (beat.fx === 'lunge') {
+      haptics.scare();
+      flash.setValue(0.55);
+      Animated.timing(flash, { toValue: 0, duration: 500, useNativeDriver: true }).start();
+    }
+    if (creepy && beat.who !== 'none') {
+      if (beat.fx !== 'lunge') haptics.warn();
       if (!ghostPlayed.current) {
         ghostPlayed.current = true;
         playGhost();
@@ -65,8 +80,8 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
       ).start();
       pulse.setValue(1);
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.12, duration: 160, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: beat.fx === 'lunge' ? 1.7 : 1.12, duration: beat.fx === 'lunge' ? 140 : 160, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: beat.fx === 'lunge' ? 520 : 260, useNativeDriver: true }),
       ]).start();
     }
   }, [index]);
@@ -95,6 +110,9 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.flicker, { opacity: flicker.interpolate({ inputRange: [0, 1], outputRange: [0.05, 0.35] }) }]}
       />
+
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.blackout, { opacity: dark }]} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, { opacity: flash }]} />
 
       {/* The scene is one big tap target; the skip link sits on top of it. */}
       <Pressable style={StyleSheet.absoluteFill} onPress={advance} />
@@ -147,6 +165,8 @@ const styles = StyleSheet.create({
   scene: { position: 'absolute', ...SCREEN_BLEED, backgroundColor: '#000', zIndex: 30, overflow: 'hidden' },
   dim: { backgroundColor: 'rgba(0,0,0,0.38)' },
   flicker: { backgroundColor: '#000' },
+  blackout: { backgroundColor: '#000' },
+  flash: { backgroundColor: colors.bloodBright },
   sprite: { position: 'absolute', bottom: 190 },
   box: {
     position: 'absolute', left: 20, right: 20, bottom: 48, padding: 16, borderRadius: 12,

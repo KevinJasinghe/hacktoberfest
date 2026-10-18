@@ -20,7 +20,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 9 | Polish the full run | Not started |
 
 **Already done:**
-- Expo SDK 58 (React Native 0.88, TypeScript) with all approved packages.
+- Expo SDK 57 (React Native 0.86, TypeScript) with all approved packages. Downgraded from 58 because the App Store Expo Go only supports 57 until the SDK 58 release lands.
 - CC0 audio in `assets/audio/`.
 - `src/scoring.ts` with tests.
 - `.env.example`, with `.env` git-ignored.
@@ -47,7 +47,7 @@ Update this table as steps land.
    - **Mac, or Windows without WSL:** run `npx expo start` and scan the QR code with the iPhone camera.
    - **WSL2:** the default network mode hides the dev server from the phone. Run `npx expo start --tunnel` instead, and accept the one-time `@expo/ngrok` install.
    - **Venue Wi-Fi** often blocks phone-to-laptop traffic, so use `--tunnel` there too.
-4. The phone needs the latest **Expo Go** from the App Store, which must support SDK 58.
+4. The phone needs the latest **Expo Go** from the App Store, which must support SDK 57.
 
 **Useful commands:**
 
@@ -56,7 +56,7 @@ Update this table as steps land.
 | `node --test src/scoring.test.ts` | Runs the scoring tests (Node 22.6+; no test package needed) |
 | `npx tsc --noEmit` | Type check (test files are excluded) |
 | `npx expo-doctor` | Checks dependency health |
-| `npx expo install <pkg>` | Adds a package at the version that matches SDK 58. Use this, not `npm install <pkg>` |
+| `npx expo install <pkg>` | Adds a package at the version that matches SDK 57. Use this, not `npm install <pkg>` |
 
 ## Rules (from the PRD)
 
@@ -64,7 +64,7 @@ Update this table as steps land.
 - **Packages:**
   - The approved list is `expo-camera`, `expo-audio`, `expo-image-manipulator`, `lottie-react-native`, `@shopify/react-native-skia`, `@react-native-async-storage/async-storage` and `firebase`, plus `expo-asset`, which `expo-audio` requires.
   - Ask the team before adding anything else.
-  - Expo SDK 58 APIs differ from older tutorials, so check https://docs.expo.dev/versions/v58.0.0/.
+  - Expo SDK 57 APIs differ from older tutorials, so check https://docs.expo.dev/versions/v57.0.0/.
 - **Gemma failures:** if Gemma fails or is rate limited, fall back to the mock responses in `src/mocks.ts`.
 - **Tests:** only for the scoring formula.
 - **Commits:** commit after each working step. Run `git status` first and make sure `.env` isn't staged.
@@ -98,7 +98,7 @@ No router library. `App.tsx` holds a `screen` state (`auth | menu | game | resul
 ### Images
 - **Drawings:** Skia `makeImageSnapshot().encodeToBase64()`.
 - **Photos:** `CameraView.takePictureAsync()`, then `expo-image-manipulator` resizes to about 512 px wide and saves as JPEG at 0.6 quality with base64: `ImageManipulator.manipulate(uri).resize({ width: 512 })`, then `renderAsync()`, then `saveAsync({ format: SaveFormat.JPEG, compress: 0.6, base64: true })`.
-  - `manipulateAsync` is deprecated in SDK 58, so don't use it.
+  - `manipulateAsync` is deprecated in newer SDKs, so don't use it.
 
 ### Firebase (`src/firebase.ts`)
 - The JS SDK (v13). Auth uses `initializeAuth` + `getReactNativePersistence(AsyncStorage)`, so players stay logged in.

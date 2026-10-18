@@ -69,8 +69,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const hints = hintsFor(puzzle).slice(0, hintCount);
   const canHint = t.remaining > HINT_COST && hintCount < MAX_HINTS;
 
-  const openLock = (skipped = false) => {
-    if (skipped && !__DEV__) return; // the skip path must never exist in a production build
+  const openLock = () => {
     sfx('lockOpen');
     banked.current.left += t.remaining;
     banked.current.spent += t.elapsed;
@@ -78,7 +77,6 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
     setGuess('');
     setHintCount(0);
     setSpirit(null);
-    // Skipping behaves exactly like solving: the next story scene plays, only the puzzle is bypassed.
     if (lock < LAST_LOCK) {
       setLock(lock + 1);
       t.reset(); // the next lock starts on a fresh timer (paused while its story scene plays)
@@ -182,11 +180,6 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
             {hintCount >= MAX_HINTS ? 'NO MORE HINTS' : `HINT ${hintCount + 1} OF ${MAX_HINTS} (-${HINT_COST}s)`}
           </Text>
         </Pressable>
-        {__DEV__ && (
-          <Pressable style={styles.skip} onPress={() => openLock(true)}>
-            <Text style={styles.skipText}>SKIP PUZZLE (dev)</Text>
-          </Pressable>
-        )}
       </ScrollView>
       <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
       <ClosingWalls remaining={t.remaining} startSec={LIMIT} />
@@ -202,8 +195,6 @@ const styles = StyleSheet.create({
   question: { marginTop: 12, marginBottom: 20, fontSize: 24, lineHeight: 32 },
   input: { borderWidth: 1, borderColor: colors.blood, borderRadius: 8, color: colors.text, fontSize: 20, padding: 14, backgroundColor: colors.panel },
   display: { borderWidth: 1, borderColor: colors.blood, borderRadius: 8, color: colors.text, fontSize: 32, fontWeight: '800', padding: 12, backgroundColor: colors.panel, textAlign: 'center' },
-  skip: { marginTop: 16, alignItems: 'center', padding: 8 },
-  skipText: { color: colors.dim, fontSize: 13, letterSpacing: 1, textDecorationLine: 'underline' },
   hints: { marginTop: 12, padding: 12, borderRadius: 8, backgroundColor: 'rgba(20,8,8,0.85)', borderWidth: 1, borderColor: '#3a1414', gap: 6 },
   hint: { color: '#e6b34a', fontSize: 16, lineHeight: 22 },
   hintPattern: { fontFamily: 'Menlo', fontSize: 17, letterSpacing: 1 },

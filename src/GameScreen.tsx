@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import CellarBackground from './CellarBackground';
 import DungeonBackground from './DungeonBackground';
 import Level1 from './Level1';
@@ -8,7 +8,7 @@ import Level3 from './Level3';
 import { useJumpscare, useRandomScares } from './Jumpscare';
 import { LevelProps } from './levels';
 import { LEVEL_LIMITS, levelPoints, totalScore } from './scoring';
-import { colors, ui } from './theme';
+import { ui } from './theme';
 
 export type RunResult = {
   levelTimes: number[]; // seconds spent per level, including failed attempts
@@ -22,17 +22,11 @@ const LIMITS = [LEVEL_LIMITS[1], LEVEL_LIMITS[2], LEVEL_LIMITS[3]];
 const LAST_LEVEL = 2;
 
 // Runs Levels 1 → 3 in order. A timeout remounts the current level (new attempt) and costs points.
-export default function GameScreen({
-  onFinish,
-  startLevel = 0,
-}: {
-  onFinish: (r: RunResult) => void;
-  startLevel?: number;
-}) {
-  const [level, setLevel] = useState(startLevel);
+export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => void }) {
+  const [level, setLevel] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [times, setTimes] = useState([0, 0, 0]);
-  const [points, setPoints] = useState<number[]>(() => Array(startLevel).fill(0));
+  const [points, setPoints] = useState<number[]>([]);
   const [timeouts, setTimeouts] = useState(0);
   const level3Objects = useRef<string[] | null>(null); // kept across a Level 3 timeout, cleared when the run restarts
   const { scare } = useJumpscare();
@@ -81,13 +75,6 @@ export default function GameScreen({
     setTimeouts(0);
   };
 
-  const skipLevel = () => {
-    if (level >= LAST_LEVEL) return;
-    setPoints((prev) => [...prev, 0]);
-    setLevel(level + 1);
-    setAttempt(0);
-  };
-
   const key = `${level}-${attempt}`;
   const props: LevelProps = { onClear, onTimeout, attempt };
   return (
@@ -97,24 +84,6 @@ export default function GameScreen({
       {level === 0 && <Level1 key={key} {...props} />}
       {level === 1 && <Level2 key={key} {...props} />}
       {level === 2 && <Level3 key={key} {...props} onWrong={restartRun} objectsRef={level3Objects} />}
-      {__DEV__ && level < LAST_LEVEL && (
-        <Pressable
-          onPress={skipLevel}
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 20,
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            borderRadius: 6,
-            borderWidth: 1,
-            borderColor: colors.dim,
-          }}
-        >
-          <Text style={{ color: colors.dim, fontSize: 12, fontWeight: '700' }}>SKIP</Text>
-        </Pressable>
-      )}
     </View>
   );
 }

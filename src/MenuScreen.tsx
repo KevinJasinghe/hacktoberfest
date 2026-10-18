@@ -1,5 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
-import { ui } from './theme';
+import DungeonBackground from './DungeonBackground';
+import GameTitle from './GameTitle';
+import { colors, ui } from './theme';
 
 type Props = {
   name?: string | null;
@@ -12,12 +14,13 @@ type Props = {
 export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut, signOutLabel = 'Sign out' }: Props) {
   return (
     <View style={ui.center}>
-      <Text style={ui.title}>HAUNTED ESCAPE</Text>
-      <Text style={[ui.dim, { marginTop: 12, marginBottom: 32, textAlign: 'center' }]}>
-        {name ? `${name}, you` : 'You'} wake at the bottom of the house. Three floors. Something is watching.
+      <DungeonBackground />
+      <GameTitle />
+      <Text style={[ui.dim, { color: colors.text, marginTop: 16, marginBottom: 32, textAlign: 'center', textShadowColor: '#000', textShadowRadius: 8 }]}>
+        {name ? `${name}, you` : 'You'} wake in Gemma's dungeon. Three nights to escape. Something is watching.
       </Text>
       <Pressable style={[ui.button, { alignSelf: 'stretch' }]} onPress={onStart}>
-        <Text style={ui.buttonText}>ENTER THE HOUSE</Text>
+        <Text style={ui.buttonText}>ENTER THE DUNGEON</Text>
       </Pressable>
       {onLeaderboard && (
         <Pressable style={[ui.buttonGhost, { alignSelf: 'stretch' }]} onPress={onLeaderboard}>

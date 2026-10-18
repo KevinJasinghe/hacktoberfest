@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import DungeonBackground from './DungeonBackground';
 import { authErrorMessage, signIn, signUp } from './firebase';
+import GameTitle from './GameTitle';
 import Loader from './Loader';
 import { colors, ui } from './theme';
 
@@ -32,7 +34,8 @@ export default function AuthScreen({ onSkip }: { onSkip?: () => void }) {
 
   return (
     <KeyboardAvoidingView behavior="padding" style={ui.center}>
-      <Text style={ui.title}>HAUNTED ESCAPE</Text>
+      <DungeonBackground />
+      <GameTitle />
       <Text style={[ui.dim, { marginTop: 8, marginBottom: 24 }]}>{mode === 'signup' ? 'Sign your name in the guest book.' : 'Welcome back. We missed you.'}</Text>
       {mode === 'signup' && (
         <TextInput style={styles.input} placeholder="Display name" placeholderTextColor={colors.dim} value={name} onChangeText={setName} maxLength={20} />

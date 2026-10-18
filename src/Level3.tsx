@@ -15,7 +15,7 @@ import { useCountdown } from './useCountdown';
 // Level 3: climb a stone hall, photograph 1 Halloween object Gemma picks, then take a selfie.
 // The object is common enough to be in the room, like a pumpkin or balloons.
 // Gemma checks each photo. A wrong photo jumpscares and restarts the whole game.
-// The selfie is not checked. A skeleton, ghost, or doll lurks in that shot.
+// The selfie is not checked. A doll or a nun lunges into that shot, and the shutter fires on its own.
 type Props = LevelProps & { onWrong: () => void; objectsRef: MutableRefObject<string[] | null> };
 
 type Target = { label: string; title: string; gemma: string };
@@ -31,8 +31,14 @@ function toTarget(name: string): Target {
 
 const HALL_LINES = ['You step into the dark stone hall.', 'The final door. It wants to see you.'];
 
-type CreatureKind = 'skeleton' | 'ghost' | 'doll';
-const CREATURES: CreatureKind[] = ['skeleton', 'ghost', 'doll'];
+const CREATURES = {
+  doll: require('../assets/lurker-doll.png'),
+  nun: require('../assets/lurker-nun.png'),
+  shriek: require('../assets/jumpscare/doll.png'),
+  wail: require('../assets/jumpscare/nun.png'),
+} as const;
+type CreatureKind = keyof typeof CREATURES;
+const CREATURE_KINDS = Object.keys(CREATURES) as CreatureKind[];
 
 export default function Level3({ onClear, onTimeout, onWrong, objectsRef }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
@@ -230,10 +236,11 @@ function CameraStep({
   const [holding, setHolding] = useState(false);
   const [revealed, setRevealed] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-  const kind = useRef<CreatureKind>(CREATURES[Math.floor(Math.random() * CREATURES.length)]).current;
+  const kind = useRef<CreatureKind>(CREATURE_KINDS[Math.floor(Math.random() * CREATURE_KINDS.length)]).current;
   const side = useRef<'left' | 'right'>(Math.random() < 0.5 ? 'left' : 'right').current;
   const lurkerSeen = useRef(false);
   const pending = useRef({ remaining: 0, elapsed: 0 });
+  const scareTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onPassRef = useRef(onPass);
   onPassRef.current = onPass;
   const { scare, playGhost } = useJumpscare();
@@ -247,8 +254,10 @@ function CameraStep({
     return () => clearTimeout(id);
   }, [revealed]);
 
+  useEffect(() => () => clearTimeout(scareTimer.current), []);
+
   const snap = async () => {
-    if (!camera.current || !ready || checking || holding) return;
+    if (!camera.current || !ready || checking || holding) return false;
     const remaining = t.remaining;
     const elapsed = t.elapsed;
     setChecking(true);
@@ -260,21 +269,27 @@ function CameraStep({
         setHolding(true);
         setRevealed(photo.uri);
         setChecking(false);
-        return;
+        return true;
       }
       const ctx = ImageManipulator.manipulate(photo.uri);
       ctx.resize({ width: 512 });
       const small = await (await ctx.renderAsync()).saveAsync({ format: SaveFormat.JPEG, compress: 0.6, base64: true });
       const result = await checkPhoto(small.base64 ?? '', target.gemma);
-      if (result.match) return onPass(remaining, elapsed);
+      if (result.match) {
+        onPass(remaining, elapsed);
+        return true;
+      }
       scare('GET OUT');
       onWrong();
-      return;
+      return true;
     } catch {
       setComment('The camera blinked. Try again.');
     }
     setChecking(false);
+    return false;
   };
+  const snapRef = useRef(snap);
+  snapRef.current = snap;
 
   const label = isSelfie ? 'Selfie' : objectCount === 1 ? target.label : `${target.label} · ${step + 1} of ${objectCount}`;
   const heading = revealed ? 'It was behind you.' : isSelfie ? 'Now show me your face.' : target.title;
@@ -283,7 +298,7 @@ function CameraStep({
     <View style={styles.wrap}>
       <TimerBar remaining={t.remaining} limit={limit} label={`Level 3 · Stone Hall · ${label}`} paused={checking || holding} />
       <Text style={ui.heading}>{heading}</Text>
-      {!revealed && <Text style={ui.dim}>{isSelfie ? 'Hold still.' : 'Fill the frame with it.'}</Text>}
+      {!revealed && <Text style={ui.dim}>{isSelfie ? "Don't look away." : 'Fill the frame with it.'}</Text>}
       <View style={styles.cameraBox}>
         {revealed ? (
           <>
@@ -307,6 +322,12 @@ function CameraStep({
                 playGhost={playGhost}
                 onShown={() => {
                   lurkerSeen.current = true;
+                  clearTimeout(scareTimer.current);
+                  scareTimer.current = setTimeout(() => {
+                    void snapRef.current().then((ok) => {
+                      if (!ok) setComment((prev) => prev || 'The camera blinked. Try again.');
+                    });
+                  }, 420);
                 }}
               />
             )}
@@ -319,8 +340,8 @@ function CameraStep({
         )}
       </View>
       {!!comment && !checking && <Text style={[ui.body, { color: colors.bloodBright, marginTop: 8 }]}>{comment}</Text>}
-      {!revealed && (
-        <Pressable style={[ui.button, (!ready || checking) && { opacity: 0.4 }]} onPress={snap} disabled={!ready || checking}>
+      {!revealed && (!isSelfie || !!comment) && (
+        <Pressable style={[ui.button, (!ready || checking) && { opacity: 0.4 }]} onPress={() => { void snap(); }} disabled={!ready || checking}>
           <Text style={ui.buttonText}>{isSelfie ? 'TAKE SELFIE' : 'SNAP'}</Text>
         </Pressable>
       )}
@@ -336,7 +357,7 @@ function ShutterFlash() {
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, { opacity }]} />;
 }
 
-// Appears in a corner of the selfie so it reads as something standing behind the player.
+// Lunges in over the selfie. The live shot is almost full-frame; the still pulls aside so the reaction shows.
 function Lurker({
   kind,
   side,
@@ -355,7 +376,8 @@ function Lurker({
   quiet?: boolean;
 }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1.5)).current;
+  const scale = useRef(new Animated.Value(big ? 1.15 : 1.65)).current;
+  const jitter = useRef(new Animated.Value(0)).current;
   const red = useRef(new Animated.Value(0)).current;
   const playRef = useRef(playGhost);
   const shownRef = useRef(onShown);
@@ -364,16 +386,22 @@ function Lurker({
 
   useEffect(() => {
     let anim: Animated.CompositeAnimation | null = null;
-    const delay = immediate ? 60 : 2500 + Math.random() * 4000;
+    const delay = immediate ? 40 : 1400 + Math.random() * 1600;
     const id = setTimeout(() => {
       shownRef.current?.();
       if (!quiet) playRef.current();
       anim = Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: big ? 1.08 : 1, friction: 5, tension: 120, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 30, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 5, tension: 170, useNativeDriver: true }),
         Animated.sequence([
-          Animated.timing(red, { toValue: 0.55, duration: 40, useNativeDriver: true }),
-          Animated.timing(red, { toValue: 0, duration: 320, useNativeDriver: true }),
+          Animated.timing(jitter, { toValue: 12, duration: 28, useNativeDriver: true }),
+          Animated.timing(jitter, { toValue: -10, duration: 28, useNativeDriver: true }),
+          Animated.timing(jitter, { toValue: 5, duration: 28, useNativeDriver: true }),
+          Animated.timing(jitter, { toValue: 0, duration: 36, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(red, { toValue: 0.7, duration: 30, useNativeDriver: true }),
+          Animated.timing(red, { toValue: 0, duration: 260, useNativeDriver: true }),
         ]),
       ]);
       anim.start();
@@ -382,75 +410,24 @@ function Lurker({
       clearTimeout(id);
       anim?.stop();
     };
-  }, [big, immediate, opacity, quiet, red, scale]);
+  }, [big, immediate, jitter, opacity, quiet, red, scale]);
 
-  const lean = side === 'left' ? '12deg' : '-12deg';
-  const edge = side === 'left' ? { left: big ? 6 : -12 } : { right: big ? 6 : -12 };
+  const lean = side === 'left' ? '5deg' : '-5deg';
+  const edge = side === 'left' ? { left: big ? 0 : -28 } : { right: big ? 0 : -28 };
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.redFlash, { opacity: red }]} />
-      <Animated.View style={[styles.figure, edge, { opacity, transform: [{ scale }, { rotate: lean }] }]}>
-        <View style={styles.shadow} />
-        {kind === 'skeleton' && <Skeleton />}
-        {kind === 'ghost' && <Ghost />}
-        {kind === 'doll' && <Doll />}
-      </Animated.View>
-    </View>
-  );
-}
-
-function Skeleton() {
-  return (
-    <View style={styles.skel}>
-      <View style={styles.skull}>
-        <View style={styles.socketRow}>
-          <View style={styles.socket} />
-          <View style={styles.socket} />
-        </View>
-        <View style={styles.nasal} />
-        <View style={styles.teethRow}>
-          {Array.from({ length: 6 }, (_, i) => (
-            <View key={i} style={styles.tooth} />
-          ))}
-        </View>
-      </View>
-      <View style={styles.spine} />
-      {[78, 96, 84, 64].map((width, i) => (
-        <View key={i} style={[styles.rib, { width }]} />
-      ))}
-    </View>
-  );
-}
-
-function Ghost() {
-  return (
-    <View style={styles.ghost}>
-      <View style={styles.ghostEyes}>
-        <View style={styles.ghostEye} />
-        <View style={styles.ghostEye} />
-      </View>
-      <View style={styles.ghostMouth} />
-      <View style={styles.ghostHem}>
-        <View style={styles.ghostWave} />
-        <View style={styles.ghostWave} />
-        <View style={styles.ghostWave} />
-      </View>
-    </View>
-  );
-}
-
-function Doll() {
-  return (
-    <View style={styles.doll}>
-      <View style={styles.hair} />
-      <View style={styles.face}>
-        <View style={styles.dollEyes}>
-          <View style={[styles.dollEye, { marginTop: 7 }]} />
-          <View style={styles.dollEye} />
-        </View>
-        <View style={styles.dollSmile} />
-      </View>
-      <View style={styles.dress} />
+      <Animated.Image
+        source={CREATURES[kind]}
+        resizeMode="contain"
+        fadeDuration={0}
+        style={[
+          styles.creature,
+          big ? styles.creatureStill : styles.creatureLive,
+          edge,
+          { opacity, transform: [{ translateX: jitter }, { scale }, { rotate: lean }] },
+        ]}
+      />
     </View>
   );
 }
@@ -491,34 +468,7 @@ const styles = StyleSheet.create({
   },
   flash: { backgroundColor: '#fff', zIndex: 4 },
   redFlash: { backgroundColor: 'rgba(160, 0, 0, 0.9)' },
-  figure: { position: 'absolute', top: '18%', width: 150, alignItems: 'center' },
-  shadow: { position: 'absolute', bottom: 6, width: 100, height: 18, borderRadius: 40, backgroundColor: 'rgba(0,0,0,0.45)' },
-  skel: { alignItems: 'center' },
-  skull: { width: 92, height: 100, borderRadius: 46, backgroundColor: '#e7e1d6', alignItems: 'center', paddingTop: 24 },
-  socketRow: { flexDirection: 'row' },
-  socket: { width: 22, height: 26, borderRadius: 11, backgroundColor: '#141210', marginHorizontal: 8 },
-  nasal: { width: 10, height: 8, borderRadius: 4, backgroundColor: '#2a2622', marginTop: 6 },
-  teethRow: { flexDirection: 'row', backgroundColor: '#111', borderRadius: 2, padding: 2, marginTop: 6 },
-  tooth: { width: 6, height: 8, backgroundColor: '#efe8dc', marginHorizontal: 1 },
-  spine: { width: 8, height: 14, backgroundColor: '#e6e0d4' },
-  rib: { height: 7, borderRadius: 4, backgroundColor: '#e6e0d4', marginTop: 4 },
-  ghost: {
-    width: 120, height: 168, backgroundColor: 'rgba(244,244,248,0.94)',
-    borderTopLeftRadius: 60, borderTopRightRadius: 60, alignItems: 'center', paddingTop: 46,
-  },
-  ghostEyes: { flexDirection: 'row' },
-  ghostEye: { width: 16, height: 24, borderRadius: 8, backgroundColor: '#161616', marginHorizontal: 12 },
-  ghostMouth: { width: 28, height: 34, borderRadius: 14, backgroundColor: '#161616', marginTop: 12 },
-  ghostHem: { position: 'absolute', bottom: -12, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-evenly' },
-  ghostWave: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(244,244,248,0.94)' },
-  doll: { alignItems: 'center', paddingTop: 18 },
-  hair: { position: 'absolute', top: 10, width: 84, height: 52, borderTopLeftRadius: 42, borderTopRightRadius: 42, backgroundColor: '#140e0c' },
-  face: { width: 72, height: 84, borderRadius: 36, backgroundColor: '#f0cbb8', alignItems: 'center', paddingTop: 26 },
-  dollEyes: { flexDirection: 'row' },
-  dollEye: { width: 11, height: 11, borderRadius: 6, backgroundColor: '#1a1a1a', marginHorizontal: 8 },
-  dollSmile: {
-    width: 34, height: 14, marginTop: 8, borderBottomWidth: 3, borderColor: '#7a1020',
-    borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
-  },
-  dress: { width: 78, height: 52, backgroundColor: '#4a1020', marginTop: -4 },
+  creature: { position: 'absolute', bottom: 0 },
+  creatureLive: { width: '100%', height: '112%', top: '-8%' },
+  creatureStill: { width: '68%', height: '104%', top: '-2%' },
 });

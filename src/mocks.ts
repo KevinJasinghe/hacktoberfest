@@ -35,7 +35,7 @@ const FAIL_LINES = [
   'This is fine. Everything is fine. The drawing is not fine.',
 ];
 
-const OBJECTS = ['spoon', 'key', 'candle', 'scissors', 'sock', 'flashlight', 'mug', 'book', 'toothbrush', 'pen'];
+const OBJECTS = ['pumpkin', 'balloons', 'candle', 'candy', 'plastic spider', 'paper bat', 'jack-o-lantern'];
 
 export const mocks = {
   // Same mix as Gemma's: 1 riddle, the rest math.
@@ -47,6 +47,6 @@ export const mocks = {
     const score = 55 + Math.floor(Math.random() * 41);
     return { score, comment: pick(score > 75 ? PASS_LINES : FAIL_LINES) };
   },
-  pickObjects: (): string[] => shuffle(OBJECTS).slice(0, 2),
+  pickObjects: (count = 1): string[] => shuffle(OBJECTS).slice(0, count),
   checkPhoto: (): PhotoCheck => ({ match: true, comment: 'It will do.' }),
 };

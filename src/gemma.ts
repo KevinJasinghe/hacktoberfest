@@ -164,22 +164,24 @@ export function scoreDrawing(imageBase64: string, prompt: string): Promise<Drawi
   );
 }
 
-export function pickObjects(): Promise<string[]> {
+export function pickObjects(count = 1): Promise<string[]> {
   return withFallback(
     'pickObjects',
     async () => {
       const r = (await ask(
-        `Pick 2 different objects the player must find and photograph to escape, choosing from: ${sample(HOUSEHOLD_OBJECTS, 12).join(', ')}. ` +
-          'Choose the two that feel spookiest or most useful for an escape. Use the names exactly as listed. ' +
-          'Format: {"objects":["...","..."]}',
+        `Pick ${count} object${count === 1 ? '' : 's'} the player must find and photograph at an indoor Halloween gathering. ` +
+          'It must be spooky or Halloween-themed AND common enough to actually be in the room, like a pumpkin or balloons. Other good picks: a candle, wrapped candy, a plastic spider, a paper bat. ' +
+          'No rare props (no coffin, cauldron, grave, ouija board, or real skeleton). One or two words, lowercase. ' +
+          `Format: {"objects":[${Array(count).fill('"..."').join(',')}]} with exactly ${count} item${count === 1 ? '' : 's'}.`,
         undefined,
         CREATIVE,
       )) as { objects?: unknown[] };
       const objects = (r.objects ?? []).map((o) => str(o, 'object').toLowerCase());
-      if (objects.length < 2 || objects[0] === objects[1]) throw new Error('need 2 distinct objects');
-      return objects.slice(0, 2);
+      const unique = [...new Set(objects)];
+      if (unique.length < count) throw new Error(`need ${count} distinct objects`);
+      return unique.slice(0, count);
     },
-    mocks.pickObjects,
+    () => mocks.pickObjects(count),
   );
 }
 
@@ -188,8 +190,9 @@ export function checkPhoto(imageBase64: string, objectName: string): Promise<Pho
     'checkPhoto',
     async () => {
       const r = (await ask(
-        `The player was told to photograph a ${objectName}. Does this photo clearly show a ${objectName}? ` +
-          'Be fair: any real example of it counts, even partly visible. Add a one-sentence comment, taunting if they failed. ' +
+        `The player was told to photograph ${objectName}. Does this photo clearly show it? ` +
+          'Be fair: a real example counts even if it is partly visible, angled, or sharing the frame. ' +
+          'Reject the wrong object, an empty room, and a picture of a screen. Add a one-sentence comment, taunting if they failed. ' +
           'Format: {"match":true|false,"comment":"..."}',
         imageBase64,
       )) as { match?: unknown; comment?: unknown };

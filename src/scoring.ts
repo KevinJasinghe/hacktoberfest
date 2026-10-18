@@ -1,5 +1,6 @@
-export const LEVEL_LIMITS = { 1: 180, 2: 30, 3: 150 } as const;
-export const LEVEL3_ITEM_LIMITS = [60, 60, 30];
+export const LEVEL_LIMITS = { 1: 180, 2: 30, 3: 90 } as const;
+// 60s for the one object, then 30s for the selfie.
+export const LEVEL3_ITEM_LIMITS = [60, 30];
 export const MIN_LEVEL_POINTS = 100;
 export const TIMEOUT_PENALTY = 250;
 

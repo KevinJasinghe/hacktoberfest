@@ -24,7 +24,7 @@ const speakerName = (b: Beat) => (b.who === 'ghost' ? 'THE KEEPER' : b.who === '
 // tap again for the next one; the last tap hands control back. The caller pauses its timer meanwhile.
 export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: () => void }) {
   const { width, height } = useWindowDimensions();
-  const { playGhost, playScare } = useJumpscare();
+  const { playScare } = useJumpscare();
   const { sfx } = useAudio();
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false); // current line fully typed
@@ -38,7 +38,7 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
   const pulse = useRef(new Animated.Value(1)).current;
   const dark = useRef(new Animated.Value(0)).current; // blackout overlay
   const flash = useRef(new Animated.Value(0)).current; // red flash on a lunge
-  const ghostPlayed = useRef(false);
+  const prevWho = useRef<Beat['who'] | null>(null);
 
   // Ambient loops: the character bobs, the "candle" flickers.
   useEffect(() => {
@@ -65,6 +65,10 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
         Animated.timing(dark, { toValue: 0, duration: 600, useNativeDriver: true }),
       ]).start();
     }
+    // The Keeper's sting plays when he appears: the first time in a scene, and again whenever he comes back
+    // after the narrator or another speaker (not on every consecutive line he speaks).
+    if (beat.who === 'ghost' && prevWho.current !== 'ghost') sfx('keeper', 0.85);
+    prevWho.current = beat.who;
     if (beat.sfx) sfx(beat.sfx);
     if (beat.fx === 'lunge') {
       haptics.scare();
@@ -74,10 +78,6 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
     }
     if (creepy && beat.who !== 'none') {
       if (beat.fx !== 'lunge') haptics.warn();
-      if (!ghostPlayed.current) {
-        ghostPlayed.current = true;
-        playGhost();
-      }
       Animated.sequence(
         [10, -10, 7, -7, 3, 0].map((toValue) => Animated.timing(shake, { toValue, duration: 55, useNativeDriver: true })),
       ).start();

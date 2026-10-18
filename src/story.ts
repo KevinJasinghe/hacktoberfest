@@ -12,31 +12,27 @@ export type Bg = 'cellar' | 'door' | 'doorSkull' | 'skullClose' | 'floor' | 'win
 // sfx: a one-off sound played when the beat appears (lunges always play a jumpscare sound).
 export type StorySfx = 'creak' | 'chain' | 'doorOpen' | 'heartbeatSlow';
 export type Beat = { who: Who; mood: Mood; bg: Bg; line: string; fx?: Fx; sfx?: StorySfx };
-export type Story = { intro: Beat[]; afterLock: Beat[][] }; // afterLock[0..2] play after locks 1, 2 and 3
+export type Story = { intro: Beat[]; afterLock: Beat[][] }; // afterLock[0] and [1] play after locks 1 and 2
 
 export const STORY: Story = {
   intro: [
-    { who: 'none', mood: 'creepy', bg: 'cellar', sfx: 'creak', line: 'You wake on cold stone. The door above is bolted shut. Three locks.' },
+    { who: 'none', mood: 'creepy', bg: 'cellar', sfx: 'creak', line: 'You wake on cold stone. The door above is bolted shut. Two locks.' },
     { who: 'ghost', mood: 'cute', bg: 'cellar', line: "Oh good, you're awake! I've been so lonely down here." },
     { who: 'ghost', mood: 'cute', bg: 'door', line: 'Nobody ever stays long. Nobody ever solves my little locks.' },
     { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: 'Solve my locks and you may leave. Fail, and you stay with me. Forever.' },
   ],
   afterLock: [
-    // after lock 1 (the riddle)
+    // after lock 1 (the riddle): the prisoner appears, on the puzzle before the last
     [
       { who: 'ghost', mood: 'cute', bg: 'door', line: 'Clever little thing. The first lock was a gift.' },
       { who: 'none', mood: 'creepy', bg: 'floor', sfx: 'chain', line: 'Somewhere in the dark, a chain drags across the stone.' },
-      { who: 'ghost', mood: 'creepy', bg: 'doorSkull', line: 'The second will not be so kind.' },
-    ],
-    // after lock 2 (the sum)
-    [
       { who: 'none', mood: 'creepy', bg: 'dark', fx: 'blackout', sfx: 'heartbeatSlow', line: 'The candle gutters out. In the dark, something breathes beside you.' },
-      { who: 'skeleton', mood: 'creepy', bg: 'window', line: 'I solved the second lock too. Then I stopped to rest.' },
+      { who: 'skeleton', mood: 'creepy', bg: 'window', line: 'I solved the first lock too. Then I stopped to rest.' },
       { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: "Don't rest. One lock left. Hurry, little mouse." },
     ],
-    // after lock 3 (the grid), leading into Level 2
+    // after lock 2 (the sum), leading into Level 2
     [
-      { who: 'ghost', mood: 'creepy', bg: 'doorSkull', line: "...No. That's not possible. Nobody solves the third lock." },
+      { who: 'ghost', mood: 'creepy', bg: 'doorSkull', line: "...No. That's not possible. Nobody solves the last lock." },
       { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: 'Go, then. Climb. The house is tall, and I am not the only one who lives here.' },
       { who: 'none', mood: 'creepy', bg: 'doorLight', sfx: 'doorOpen', line: 'The door groans open. Above you, the second floor is waiting.' },
     ],

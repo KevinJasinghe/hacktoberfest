@@ -1,39 +1,37 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { isCorrect } from './answers';
 import { useAudio } from './audio';
 import ClosingWalls from './ClosingWalls';
 import { Cellar, generatePuzzles } from './gemma';
 import * as haptics from './haptics';
+import { hintsFor, MAX_HINTS } from './hints';
 import { LevelProps } from './levels';
 import Loader from './Loader';
 import NumberPad from './NumberPad';
 import { LEVEL_LIMITS } from './scoring';
 import { STORY } from './story';
 import StoryScene from './StoryScene';
-import { generateSudoku } from './sudoku';
-import SudokuBoard from './SudokuBoard';
 import TimerBar from './TimerBar';
 import { colors, SCREEN_BLEED, ui } from './theme';
 import Typewriter from './Typewriter';
 import { useCountdown } from './useCountdown';
 
 const LIMIT = LEVEL_LIMITS[1];
-const HINT_COST = 15; // seconds burned per hint
-const LOCK_NAMES = ['The Riddle', 'The Sum', 'The Grid'];
+const HINT_COST = 15; // seconds burned per hint; each puzzle has MAX_HINTS rungs (src/hints.ts)
+const LOCK_NAMES = ['The Riddle', 'The Sum'];
+const LAST_LOCK = LOCK_NAMES.length - 1;
 
-// Level 1: a door with three locks. Lock 1 is a riddle, lock 2 a math puzzle, lock 3 a 4x4 sudoku.
-// A reset (timeout) remounts this level, which brings new puzzles and a new sudoku.
+// Level 1: a door with two locks. Lock 1 is a riddle and lock 2 a math puzzle, both written by Gemma.
+// A reset (timeout) remounts this level, which brings new puzzles.
 export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) {
   const [cellar, setCellar] = useState<Cellar | null>(null);
-  const sudoku = useMemo(() => generateSudoku(), []);
   const [lock, setLock] = useState(0); // index of the lock being worked on
   const [guess, setGuess] = useState('');
   const [spirit, setSpirit] = useState<string | null>(null);
-  const [hint, setHint] = useState<string | null>(null);
-  const [hintSignal, setHintSignal] = useState(0);
+  const [hintCount, setHintCount] = useState(0); // hint rungs bought for the current puzzle
   // Story cutscenes pause the timer. The intro plays on the first try only, not after every timeout.
-  const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | 'lock2' | null>(attempt === 0 ? 'intro' : null);
+  const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | null>(attempt === 0 ? 'intro' : null);
   const shake = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(0)).current;
   const { music, sfx } = useAudio();
@@ -61,22 +59,21 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
     }
   }, [secondsLeft, cellar, scene]);
 
-  if (!cellar) return <Loader text="The spirit is bolting three locks onto the cellar door..." />;
-  const puzzle = lock < 2 ? cellar.puzzles[lock] : null;
-  const canHint = t.remaining > HINT_COST && (lock === 2 || !hint);
+  if (!cellar) return <Loader text="The spirit is bolting two locks onto the cellar door..." />;
+  const puzzle = cellar.puzzles[lock];
+  const hints = hintsFor(puzzle).slice(0, hintCount);
+  const canHint = t.remaining > HINT_COST && hintCount < MAX_HINTS;
 
   const openLock = (skipped = false) => {
     if (skipped && !__DEV__) return; // the skip path must never exist in a production build
     sfx('lockOpen');
     haptics.lockOpen();
     setGuess('');
-    setHint(null);
+    setHintCount(0);
     setSpirit(null);
     // Skipping behaves exactly like solving: the next story scene plays, only the puzzle is bypassed.
-    if (lock < 2) {
-      setLock(lock + 1);
-      setScene(lock === 0 ? 'lock0' : 'lock1');
-    } else setScene('lock2'); // the closing scene leads into Level 2 and then clears the level
+    if (lock < LAST_LOCK) setLock(lock + 1);
+    setScene(lock === 0 ? 'lock0' : 'lock1'); // the last scene leads into Level 2 and then clears the level
   };
 
   const wrongAnswer = () => {
@@ -91,7 +88,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   };
 
   const submit = () => {
-    if (!puzzle || !guess.trim()) return;
+    if (!guess.trim()) return;
     if (isCorrect(guess, puzzle.answers)) openLock();
     else wrongAnswer();
   };
@@ -101,8 +98,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
     haptics.warn();
     sfx('hint');
     t.penalize(HINT_COST);
-    if (puzzle) setHint(puzzle.hint);
-    else setHintSignal(hintSignal + 1);
+    setHintCount(hintCount + 1);
   };
 
   const onPadKey = (key: string) => {
@@ -114,7 +110,7 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   if (scene) {
     const beats = scene === 'intro' ? STORY.intro : STORY.afterLock[Number(scene.slice(-1))];
     // The timer is paused during scenes, so clearing after the last one still reports the true time left.
-    const done = () => (scene === 'lock2' ? onClear(t.remaining, t.elapsed) : setScene(null));
+    const done = () => (scene === `lock${LAST_LOCK}` ? onClear(t.remaining, t.elapsed) : setScene(null));
     return (
       <KeyboardAvoidingView style={{ flex: 1 }}>
         <StoryScene key={scene} beats={beats} onDone={done} />
@@ -134,46 +130,46 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
         {spirit && <Typewriter text={spirit} style={styles.spirit} />}
-        {puzzle ? (
-          <>
-            <Text style={[ui.heading, styles.question]}>{puzzle.question}</Text>
-            <Animated.View style={{ transform: [{ translateX: shake }] }}>
-              {puzzle.type === 'math' ? (
-                <Text style={styles.display}>{guess || ' '}</Text>
-              ) : (
-                <TextInput
-                  style={styles.input}
-                  value={guess}
-                  onChangeText={setGuess}
-                  onSubmitEditing={submit}
-                  placeholder="Your answer..."
-                  placeholderTextColor={colors.dim}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  autoFocus
-                />
-              )}
-            </Animated.View>
-            {hint && <Text style={styles.hint}>Hint: {hint}</Text>}
-            {puzzle.type === 'math' ? (
-              <View style={{ marginTop: 16 }}>
-                <NumberPad onKey={onPadKey} />
-              </View>
-            ) : (
-              <Pressable style={ui.button} onPress={submit}>
-                <Text style={ui.buttonText}>ANSWER</Text>
-              </Pressable>
-            )}
-          </>
-        ) : (
-          <View style={{ marginTop: 16 }}>
-            <SudokuBoard sudoku={sudoku} onSolved={() => openLock()} hintSignal={hintSignal} />
+        <Text style={[ui.heading, styles.question]}>{puzzle.question}</Text>
+        <Animated.View style={{ transform: [{ translateX: shake }] }}>
+          {puzzle.type === 'math' ? (
+            <Text style={styles.display}>{guess || ' '}</Text>
+          ) : (
+            <TextInput
+              style={styles.input}
+              value={guess}
+              onChangeText={setGuess}
+              onSubmitEditing={submit}
+              placeholder="Your answer..."
+              placeholderTextColor={colors.dim}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              autoFocus
+            />
+          )}
+        </Animated.View>
+        {hints.length > 0 && (
+          <View style={styles.hints}>
+            {hints.map((h, i) => (
+              <Text key={i} style={[styles.hint, h.includes('_') && styles.hintPattern]}>
+                {i + 1}. {h}
+              </Text>
+            ))}
           </View>
+        )}
+        {puzzle.type === 'math' ? (
+          <View style={{ marginTop: 16 }}>
+            <NumberPad onKey={onPadKey} />
+          </View>
+        ) : (
+          <Pressable style={ui.button} onPress={submit}>
+            <Text style={ui.buttonText}>ANSWER</Text>
+          </Pressable>
         )}
         <Pressable style={[ui.buttonGhost, !canHint && { opacity: 0.35 }]} onPress={useHint} disabled={!canHint}>
           <Text style={[ui.buttonText, { color: colors.dim }]}>
-            {lock === 2 ? 'REVEAL A CELL' : 'HINT'} (-{HINT_COST}s)
+            {hintCount >= MAX_HINTS ? 'NO MORE HINTS' : `HINT ${hintCount + 1} OF ${MAX_HINTS} (-${HINT_COST}s)`}
           </Text>
         </Pressable>
         {__DEV__ && (
@@ -198,6 +194,8 @@ const styles = StyleSheet.create({
   display: { borderWidth: 1, borderColor: colors.blood, borderRadius: 8, color: colors.text, fontSize: 32, fontWeight: '800', padding: 12, backgroundColor: colors.panel, textAlign: 'center' },
   skip: { marginTop: 16, alignItems: 'center', padding: 8 },
   skipText: { color: colors.dim, fontSize: 13, letterSpacing: 1, textDecorationLine: 'underline' },
-  hint: { color: colors.dim, fontStyle: 'italic', marginTop: 10 },
+  hints: { marginTop: 12, padding: 12, borderRadius: 8, backgroundColor: 'rgba(20,8,8,0.85)', borderWidth: 1, borderColor: '#3a1414', gap: 6 },
+  hint: { color: '#e6b34a', fontSize: 16, lineHeight: 22 },
+  hintPattern: { fontFamily: 'Menlo', fontSize: 17, letterSpacing: 1 },
   flash: { position: 'absolute', ...SCREEN_BLEED, backgroundColor: colors.bloodBright, zIndex: 5 },
 });

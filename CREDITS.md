@@ -15,6 +15,7 @@ All third-party assets used in the app and their licenses.
 | `assets/audio/dungeon.mp3` | Dungeon Ambience (converted from OGG) | yd | CC0 | https://opengameart.org/content/dungeon-ambience |
 | `assets/audio/sfx-lock-open.mp3`, `sfx-wrong.mp3`, `sfx-hint.mp3`, `sfx-creak.mp3`, `sfx-door-open.mp3`, `sfx-place.mp3` | 100 CC0 metal and wood SFX (lock_open, door_open, keys, metal_hit, wood_squeak, metal_open, wood_hit; some pitched down or layered) | rubberduck | CC0 | https://opengameart.org/content/100-cc0-metal-and-wood-sfx |
 | `assets/audio/sfx-chain.mp3` | Chain winch sounds | bart | CC0 | https://opengameart.org/content/chain-winch-sounds |
+| `assets/audio/sfx-keeper.mp3` | The Keeper's appearance sting: "Ghost" layered with a trimmed "Scary Sound" | "Ghost" by Ogrebane (CC0); "Scary Echoey Horn Esque Sound" ("Scary Sound") by Kat | CC0; CC BY 4.0 (credit required: https://creativecommons.org/licenses/by/4.0/) | https://opengameart.org/content/ghost and https://opengameart.org/content/scary-echoey-horn-esque-sound |
 | `assets/audio/sfx-heartbeat.mp3`, `sfx-heartbeat-slow.mp3` | Heartbeat sounds | bart | CC0 | https://opengameart.org/content/heartbeat-sounds |
 
 ## Images

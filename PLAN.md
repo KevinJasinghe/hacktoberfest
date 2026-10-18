@@ -16,7 +16,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
 | 6 | Jumpscares, music, loader | Built: jumpscare pop-up and sound on every timeout, failed drawing and failed photo, 1–2 random scares per run, looping music, Lottie skull loader. **Needs a phone check** |
 | 7 | Firebase auth, saving runs, leaderboard | Built, and the Firebase project is set up (`scripts/firebase-smoke.mjs` passes). Without keys in `.env` the app runs as a guest with no leaderboard. **Needs a phone check** |
-| 8 | Level 1: puzzles | Built: 3 riddle/math puzzles from Gemma (mock for now), typed answers checked loosely, new puzzles on reset. Sudoku skipped for now. **Needs a phone check** |
+| 8 | Level 1: puzzles | Built: 2 puzzles from Gemma (a riddle and a math problem), answers verified by the app, a 3-step hint ladder, story cutscenes, new puzzles on reset. **Needs a phone check** |
 | 9 | Polish the full run | Not started |
 
 **Already done:**
@@ -78,7 +78,7 @@ No router library. `App.tsx` holds a `screen` state (`auth | menu | game | resul
 
 ### Gemma (`src/gemma.ts`)
 - **Billing:** Gemma 4 is free on the Free Tier and *not available* on the paid tier. Use an AI Studio key from a project **without billing** (a billed project returns HTTP 402).
-- **Variety and fairness:** each call gets random ingredients (spooky themes, 12 random household objects to choose from), because Gemma otherwise repeats the same answers. Level 1 is one riddle plus one math problem (the third lock is the app's own sudoku). The prompt in `generatePuzzles()` is deliberately rigid and every answer is verified by the app: the riddle is a spooky retelling of one from `src/riddles.ts` and its answer comes from that bank (a retelling that says the answer is rejected); the math problem comes back as an arithmetic `expression` that `src/mathExpr.ts` evaluates itself, and every number in it must appear in the question. A rejected reply is retried once, then `mocks.cellar` is used.
+- **Variety and fairness:** each call gets random ingredients (spooky themes, 12 random household objects to choose from), because Gemma otherwise repeats the same answers. Level 1 is one riddle plus one math problem. The prompt in `generatePuzzles()` is deliberately rigid and every answer is verified by the app: the riddle is a spooky retelling of one from `src/riddles.ts` and its answer comes from that bank (a retelling that says the answer is rejected); the math problem comes back as an arithmetic `expression` that `src/mathExpr.ts` evaluates itself, and every number in it must appear in the question. A rejected reply is retried once, then `mocks.cellar` is used.
 - **Temperature:** 1.0 for generated content (puzzles, prompts, objects), 0.2 for judging (drawing score, photo check).
 - Calls Google's Gemini API with plain `fetch`. The `@google/genai` package isn't used: it's not on the approved list, and it targets Node and browsers.
 - `POST https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent`
@@ -87,7 +87,7 @@ No router library. `App.tsx` holds a `screen` state (`auth | menu | game | resul
 - Images are sent inline as base64 JPEG parts.
 - **JSON:** prompts ask for JSON only. The response is parsed after stripping any code fences. We couldn't confirm that the model supports Gemini's built-in JSON mode, so the prompt and parser handle it instead.
 - **Five wrappers, matching PRD section 6:**
-  - `generatePuzzles()` (returns a riddle, a math problem, a hint for each and three spirit taunts)
+  - `generatePuzzles()` (returns a riddle, a math problem and three spirit taunts)
   - `drawingPrompt()`
   - `scoreDrawing(img, prompt)`
   - `pickObjects()`
@@ -141,7 +141,7 @@ src/AuthScreen.tsx   email/password sign-up (with display name) and sign-in
 src/MenuScreen.tsx   start run / leaderboard
 src/GameScreen.tsx   runs levels 1→3, tracks times/points/timeouts
 src/Level1.tsx  src/Level2.tsx  src/Level3.tsx
-src/sudoku.ts  src/SudokuBoard.tsx  src/NumberPad.tsx  src/Typewriter.tsx  src/ClosingWalls.tsx   Level 1 pieces
+src/NumberPad.tsx  src/Typewriter.tsx  src/ClosingWalls.tsx   Level 1 pieces
 src/ResultsScreen.tsx  src/LeaderboardScreen.tsx
 assets/audio/*       CC0 music and sound effects (see CREDITS.md)
 assets/lottie/skull.json
@@ -150,15 +150,15 @@ assets/lottie/skull.json
 ## Level behavior
 
 ### Level 1: the cellar door (3:00)
-- A door with three padlocks; each solved puzzle opens one (ghost sound). Gemma's spirit taunts you with typed-out lines (intro, wrong answer, lock opens).
+- A door with two padlocks; each solved puzzle opens one (ghost sound). Gemma's spirit taunts you with typed-out lines (intro, wrong answer, lock opens).
 - **Lock 1, riddle** (Gemma, typed answer) and **Lock 2, math puzzle** (Gemma, on-screen number pad). The timer is paused while loading.
-- **Lock 3, 4x4 sudoku** generated by the app (`src/sudoku.ts`, always one solution): tap a cell, then a digit.
-- **Hint button** costs 15 s: a Gemma hint for locks 1-2, one revealed cell for the sudoku.
+- **Hints** are a 3-step ladder per puzzle (`src/hints.ts`), 15 s each, built by the app from the known answer so they are always correct. Riddle: a hand-written nudge per riddle (in `src/riddles.ts`), then the letter pattern (`S _ _ _ _ _`), then alternate letters (`S _ A _ O _`). Math: which operations it uses, then the bare equation (`13 − 5 + 2 = ?`), then the first step worked out.
 - A wrong answer shakes the input and flashes red. A dark "closing walls" frame (`src/ClosingWalls.tsx`) tightens and flickers over the last 60 s.
-- **Story cutscenes** (`src/StoryScene.tsx`): a 4-beat intro (first attempt only) and a 3-beat scene after each lock (the last one leads into Level 2), with the Keeper ghost, a skeleton prisoner, typed dialogue and a skull that appears on the door. The timer is paused during scenes. The story is fixed on purpose (`src/story.ts`), so each beat can name its character, mood, backdrop (`bg`, drawn in `src/SceneBackground.tsx`) and effect (`lunge`, `blackout`); don't generate it with Gemma.
+- **Story cutscenes** (`src/StoryScene.tsx`): a 4-beat intro (first attempt only), a 5-beat scene after the riddle (the prisoner) and a 3-beat scene after the math puzzle (it leads into Level 2), with the Keeper ghost, a skeleton prisoner, typed dialogue and a skull that appears on the door. The timer is paused during scenes. The story is fixed on purpose (`src/story.ts`), so each beat can name its character, mood, backdrop (`bg`, drawn in `src/SceneBackground.tsx`) and effect (`lunge`, `blackout`); don't generate it with Gemma.
+- **Two locks, and the prisoner.** After the riddle (the puzzle before the last) the story blacks out and the skeleton prisoner appears; after the math puzzle the door opens into Level 2. The Keeper has a sting (`sfx-keeper.mp3`) that plays whenever he appears.
 - **Audio** (`src/audio.tsx`): `useAudio()` gives `music(track)` (crossfades between `main`, `tense` for puzzles and `dungeon` for story scenes) and `sfx(name)` (lock open, wrong answer, hint, creak, door open, chain, heartbeat, soft knock on key presses). Story beats can name a sound with `sfx`, and lunges play a jumpscare sound. Levels 2 and 3 keep the `main` loop and can use `sfx` too.
 - A tiled, darkened brick wall (`src/CellarBackground.tsx`, CC0 texture credited in `CREDITS.md`) sits behind all of Level 1.
-- **Timeout:** jumpscare, −250, and a fresh riddle, math puzzle and sudoku.
+- **Timeout:** jumpscare, −250, and a fresh riddle and math puzzle.
 
 ### Level 2: drawing (3:00)
 - Gemma gives a spooky drawing prompt.

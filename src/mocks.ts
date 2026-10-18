@@ -6,11 +6,11 @@ const pick = <T>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 const shuffle = <T>(list: T[]) => [...list].sort(() => Math.random() - 0.5);
 
 const MATH: Puzzle[] = [
-  { type: 'math', question: 'A coffin holds 3 skeletons. How many coffins do you need for 21 skeletons?', answers: ['7'], hint: '21 divided by 3.' },
-  { type: 'math', question: 'A ghost haunts 4 rooms a night. How many rooms does it haunt in a week?', answers: ['28'], hint: 'There are 7 nights in a week.' },
-  { type: 'math', question: '13 candles are lit. The wind blows out 5, then you relight 2. How many are lit?', answers: ['10'], hint: '13 - 5, then + 2.' },
-  { type: 'math', question: 'What is 6 × 6 + 6?', answers: ['42'], hint: 'Multiply first, then add.' },
-  { type: 'math', question: 'A spider has 8 legs. How many legs do 5 spiders have?', answers: ['40'], hint: '8 times 5.' },
+  { type: 'math', question: 'A coffin holds 3 skeletons. How many coffins do you need for 21 skeletons?', answers: ['7'], hint: 'This one uses division.', expression: '21 / 3' },
+  { type: 'math', question: 'A ghost haunts 4 rooms a night. How many rooms does it haunt in a week?', answers: ['28'], hint: 'This one uses multiplication.', expression: '4 x 7' },
+  { type: 'math', question: '13 candles are lit. The wind blows out 5, then you relight 2. How many are lit?', answers: ['10'], hint: 'This one uses subtraction and addition.', expression: '13 - 5 + 2' },
+  { type: 'math', question: 'What is 6 × 6 + 6?', answers: ['42'], hint: 'This one uses multiplication and addition.', expression: '6 x 6 + 6' },
+  { type: 'math', question: 'A spider has 8 legs. How many legs do 5 spiders have?', answers: ['40'], hint: 'This one uses multiplication.', expression: '8 x 5' },
 ];
 
 const PROMPTS = [
@@ -30,11 +30,11 @@ export const mocks = {
     const riddle = pick(RIDDLES);
     return {
       puzzles: [
-        { type: 'riddle', ...riddle, hint: `It starts with the letter "${riddle.answers[0][0].toUpperCase()}".` },
+        { type: 'riddle', ...riddle },
         pick(MATH),
       ],
       lines: {
-        intro: 'Three locks hold you here, little mouse. Solve them before the walls finish closing in...',
+        intro: 'Two locks hold you here, little mouse. Solve them before the walls finish closing in...',
         wrong: 'Wrong. I can hear your heart racing.',
         solved: 'One lock falls. Do not get comfortable.',
       },

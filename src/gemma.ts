@@ -1,5 +1,6 @@
 // Gemma 4 dungeon master, called through Google's Gemini API with plain fetch.
 // Every wrapper falls back to src/mocks.ts if the call fails or returns bad JSON.
+import { describeOps } from './hints';
 import { evaluate } from './mathExpr';
 import { mocks } from './mocks';
 import { RIDDLES } from './riddles';
@@ -27,7 +28,8 @@ const HOUSEHOLD_OBJECTS = [
 ];
 const sample = <T>(list: T[], n: number) => [...list].sort(() => Math.random() - 0.5).slice(0, n);
 
-export type Puzzle = { type: 'riddle' | 'math'; question: string; answers: string[]; hint: string };
+// hint is the weakest help (see src/hints.ts for the rest); expression is the arithmetic behind a math puzzle.
+export type Puzzle = { type: 'riddle' | 'math'; question: string; answers: string[]; hint: string; expression?: string };
 // What the spirit says during Level 1; shown with a typewriter effect.
 export type SpiritLines = { intro: string; wrong: string; solved: string };
 export type Cellar = { puzzles: Puzzle[]; lines: SpiritLines };
@@ -95,7 +97,7 @@ const str = (v: unknown, field: string): string => {
   return v.trim();
 };
 
-// Level 1 content: one riddle and one math puzzle (the third lock is a sudoku the app builds itself).
+// Level 1 content: one riddle and one math puzzle, plus the spirit's taunts.
 //
 // The prompt is rigid on purpose, and every answer is checked by the app instead of trusted:
 //  - the riddle comes from our vetted bank (src/riddles.ts), so its answer is known; Gemma only retells it,
@@ -106,8 +108,8 @@ const str = (v: unknown, field: string): string => {
 const ATTEMPTS = 2;
 
 type RawCellar = {
-  riddle?: { index?: unknown; question?: unknown; hint?: unknown };
-  math?: { question?: unknown; expression?: unknown; hint?: unknown };
+  riddle?: { index?: unknown; question?: unknown };
+  math?: { question?: unknown; expression?: unknown };
   lines?: Record<string, unknown>;
 };
 
@@ -124,10 +126,9 @@ async function buildCellar(): Promise<Cellar> {
       'Write every number as digits and state every number the player needs inside the question. ' +
       'Give the arithmetic as "expression" (for example "13 - 5 + 2"); the game computes the answer itself, so do not give one. ' +
       'The result must be a whole number from 2 to 99, solvable in under 30 seconds.\n\n' +
-      'For each lock also write a "hint": one short sentence that nudges the player without giving the answer away. ' +
       'Then write three taunts of one short sentence each: "intro" greeting the player, "wrong" for a wrong answer, "solved" for when a lock opens.\n\n' +
       'Reply with JSON only, in exactly this shape: ' +
-      '{"riddle":{"index":0,"question":"...","hint":"..."},"math":{"question":"...","expression":"...","hint":"..."},"lines":{"intro":"...","wrong":"...","solved":"..."}}',
+      '{"riddle":{"index":0,"question":"..."},"math":{"question":"...","expression":"..."},"lines":{"intro":"...","wrong":"...","solved":"..."}}',
     undefined,
     CREATIVE,
   )) as RawCellar;
@@ -150,8 +151,8 @@ async function buildCellar(): Promise<Cellar> {
   const lines = r.lines ?? {};
   return {
     puzzles: [
-      { type: 'riddle', question: riddleText, answers: chosen.answers, hint: str(r.riddle?.hint, 'riddle hint') },
-      { type: 'math', question: mathText, answers: [String(answer)], hint: str(r.math?.hint, 'math hint') },
+      { type: 'riddle', question: riddleText, answers: chosen.answers, hint: chosen.hint },
+      { type: 'math', question: mathText, answers: [String(answer)], hint: `This one uses ${describeOps(expression)}.`, expression },
     ],
     lines: { intro: str(lines.intro, 'intro'), wrong: str(lines.wrong, 'wrong'), solved: str(lines.solved, 'solved') },
   };

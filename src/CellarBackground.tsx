@@ -1,6 +1,6 @@
 import { ImageBackground, StyleSheet, View } from 'react-native';
 
-// Tiled brick wall behind Level 1, darkened so text and the sudoku panel stay readable.
+// Tiled brick wall behind Level 1, darkened so the puzzle text stays readable.
 export default function CellarBackground() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>

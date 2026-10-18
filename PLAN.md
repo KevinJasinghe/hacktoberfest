@@ -13,7 +13,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 2 | Game shell on mock responses | Built: menu → 3 placeholder levels → results, with timers, resets and scoring. **Needs a phone check** |
 | 3 | Gemma client and mocks | Built (`src/gemma.ts`, `src/mocks.ts`). Real calls untested: **the key's AI Studio project has no credits (HTTP 402)**, so the app uses mocks for now |
 | 4 | Level 2: drawing | Built: Skia finger drawing, Clear/Submit, Gemma score (mock for now), redraw on 75 or below. Jumpscare on failure comes in step 6. **Needs a phone check** |
-| 5 | Level 3: camera hunt | Not started |
+| 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
 | 6 | Jumpscares, music, loader | Not started |
 | 7 | Firebase auth, saving runs, leaderboard | Not started. **Needs the Firebase project** |
 | 8 | Level 1: puzzles | Not started |

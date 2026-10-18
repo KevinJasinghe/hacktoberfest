@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import Level1 from './Level1';
 import Level2 from './Level2';
@@ -15,8 +15,8 @@ export type RunResult = {
   totalTime: number;
 };
 
-const LEVELS: ((p: LevelProps) => React.JSX.Element)[] = [Level1, Level2, Level3];
 const LIMITS = [LEVEL_LIMITS[1], LEVEL_LIMITS[2], LEVEL_LIMITS[3]];
+const LAST_LEVEL = 2;
 
 // Runs Levels 1 → 3 in order. A timeout remounts the current level (new attempt) and costs points.
 export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => void }) {
@@ -25,6 +25,7 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
   const [times, setTimes] = useState([0, 0, 0]);
   const [points, setPoints] = useState<number[]>([]);
   const [timeouts, setTimeouts] = useState(0);
+  const level3Objects = useRef<string[] | null>(null); // kept across Level 3 resets
 
   const addTime = (spent: number) => {
     const next = [...times];
@@ -37,7 +38,7 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
     const nextTimes = addTime(spent);
     const nextPoints = [...points, levelPoints(secondsRemaining, LIMITS[level])];
     setPoints(nextPoints);
-    if (level < LEVELS.length - 1) {
+    if (level < LAST_LEVEL) {
       setLevel(level + 1);
       setAttempt(0);
       return;
@@ -58,10 +59,13 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
     setAttempt(attempt + 1);
   };
 
-  const Level = LEVELS[level];
+  const key = `${level}-${attempt}`;
+  const props: LevelProps = { onClear, onTimeout };
   return (
     <View style={ui.screen}>
-      <Level key={`${level}-${attempt}`} onClear={onClear} onTimeout={onTimeout} />
+      {level === 0 && <Level1 key={key} {...props} />}
+      {level === 1 && <Level2 key={key} {...props} />}
+      {level === 2 && <Level3 key={key} {...props} objectsRef={level3Objects} />}
     </View>
   );
 }

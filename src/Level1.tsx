@@ -58,21 +58,16 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
 
   const openLock = (skipped = false) => {
     if (skipped && !__DEV__) return; // the skip path must never exist in a production build
-    if (!skipped) {
-      playGhost();
-      haptics.lockOpen();
-    }
+    playGhost();
+    haptics.lockOpen();
     setGuess('');
     setHint(null);
+    setSpirit(null);
+    // Skipping behaves exactly like solving: the next story scene plays, only the puzzle is bypassed.
     if (lock < 2) {
       setLock(lock + 1);
-      if (skipped) setSpirit(cellar.lines.intro);
-      else {
-        setSpirit(null);
-        setScene(lock === 0 ? 'lock0' : 'lock1');
-      }
-    } else if (skipped) onClear(t.remaining, t.elapsed);
-    else setScene('lock2'); // the closing scene leads into Level 2 and then clears the level
+      setScene(lock === 0 ? 'lock0' : 'lock1');
+    } else setScene('lock2'); // the closing scene leads into Level 2 and then clears the level
   };
 
   const wrongAnswer = () => {

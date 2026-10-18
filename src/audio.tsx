@@ -7,7 +7,7 @@ import { createContext, ReactNode, useContext, useEffect, useRef } from 'react';
 //   dungeon = Level 1 story scenes
 export type Track = 'main' | 'tense' | 'dungeon';
 // Sound effects (the jumpscare sounds live in Jumpscare.tsx).
-export type SfxName = 'lockOpen' | 'wrong' | 'hint' | 'creak' | 'doorOpen' | 'chain' | 'heartbeat' | 'heartbeatSlow' | 'place';
+export type SfxName = 'keeper' | 'lockOpen' | 'wrong' | 'hint' | 'creak' | 'doorOpen' | 'chain' | 'heartbeat' | 'heartbeatSlow' | 'place';
 
 const TRACK_VOLUME: Record<Track, number> = { main: 0.5, tense: 0.5, dungeon: 0.55 };
 const FADE_OUT_MS = 700;
@@ -37,6 +37,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     heartbeat: useAudioPlayer(require('../assets/audio/sfx-heartbeat.mp3')),
     heartbeatSlow: useAudioPlayer(require('../assets/audio/sfx-heartbeat-slow.mp3')),
     place: useAudioPlayer(require('../assets/audio/sfx-place.mp3')),
+    keeper: useAudioPlayer(require('../assets/audio/sfx-keeper.mp3')),
   };
   const current = useRef<Track | null>(null);
   const fades = useRef(new Map<Player, ReturnType<typeof setInterval>>());

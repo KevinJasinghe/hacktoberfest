@@ -19,6 +19,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'menu' });
   // undefined = still checking for a saved login
   const [user, setUser] = useState<User | null | undefined>(firebaseEnabled ? undefined : null);
+  // Playing without logging in (development builds only): runs are not saved and not on the leaderboard.
+  const [guest, setGuest] = useState(false);
 
   useEffect(() => (auth ? onAuthStateChanged(auth, setUser) : undefined), []);
 
@@ -26,7 +28,7 @@ export default function App() {
 
   let content;
   if (user === undefined) content = <View style={ui.center}><Loader text="The house remembers you..." /></View>;
-  else if (firebaseEnabled && !user) content = <AuthScreen />;
+  else if (firebaseEnabled && !user && !guest) content = <AuthScreen onSkip={__DEV__ ? () => setGuest(true) : undefined} />;
   else if (screen.name === 'game') content = <GameScreen onFinish={(result) => setScreen({ name: 'results', result })} />;
   else if (screen.name === 'results') content = <ResultsScreen result={screen.result} user={user} onDone={menu} />;
   else if (screen.name === 'leaderboard') content = <LeaderboardScreen uid={user?.uid} onBack={menu} />;
@@ -36,7 +38,8 @@ export default function App() {
         name={user?.displayName}
         onStart={() => setScreen({ name: 'game' })}
         onLeaderboard={firebaseEnabled ? () => setScreen({ name: 'leaderboard' }) : undefined}
-        onSignOut={auth ? () => signOut(auth!) : undefined}
+        onSignOut={auth ? () => (user ? signOut(auth!) : setGuest(false)) : undefined}
+        signOutLabel={user ? 'Sign out' : 'Log in'}
       />
     );
 

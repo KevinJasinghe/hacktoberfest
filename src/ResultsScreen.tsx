@@ -42,6 +42,7 @@ export default function ResultsScreen({ result, user, onDone }: { result: RunRes
           </View>
         )}
       </View>
+      {saved === null && <Text style={ui.dim}>Guest run: not saved. Log in to get on the leaderboard.</Text>}
       {saved === 'saving' && <Text style={ui.dim}>Carving your name into the wall...</Text>}
       {saved === 'saved' && <Text style={ui.dim}>Run saved. Your best run counts on the leaderboard.</Text>}
       {saved === 'failed' && <Text style={[ui.dim, { color: colors.bloodBright }]}>Couldn't save your score.</Text>}

@@ -5,7 +5,8 @@ import Loader from './Loader';
 import { colors, ui } from './theme';
 
 // Email/password sign-up (with a display name for the leaderboard) and log-in.
-export default function AuthScreen() {
+// `onSkip` (development builds only) lets you play as a guest: runs are not saved.
+export default function AuthScreen({ onSkip }: { onSkip?: () => void }) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -67,6 +68,11 @@ export default function AuthScreen() {
       >
         <Text style={[ui.dim, { marginTop: 16 }]}>{mode === 'signup' ? 'Already have an account? Log in' : 'New here? Sign up'}</Text>
       </Pressable>
+      {onSkip && (
+        <Pressable style={[ui.buttonGhost, styles.wide, { marginTop: 28 }]} onPress={onSkip}>
+          <Text style={ui.buttonText}>SKIP FOR NOW</Text>
+        </Pressable>
+      )}
     </KeyboardAvoidingView>
   );
 }

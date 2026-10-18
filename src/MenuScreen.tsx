@@ -1,9 +1,9 @@
 import { Pressable, Text, View } from 'react-native';
 import { ui } from './theme';
 
-type Props = { name?: string | null; onStart: () => void; onLeaderboard?: () => void; onSignOut?: () => void };
+type Props = { name?: string | null; onStart: () => void; onLeaderboard?: () => void; onSignOut?: () => void; signOutLabel?: string };
 
-export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut }: Props) {
+export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut, signOutLabel = 'Sign out' }: Props) {
   return (
     <View style={ui.center}>
       <Text style={ui.title}>HAUNTED ESCAPE</Text>
@@ -20,7 +20,7 @@ export default function MenuScreen({ name, onStart, onLeaderboard, onSignOut }: 
       )}
       {onSignOut && (
         <Pressable onPress={onSignOut}>
-          <Text style={[ui.dim, { marginTop: 24 }]}>Sign out</Text>
+          <Text style={[ui.dim, { marginTop: 24 }]}>{signOutLabel}</Text>
         </Pressable>
       )}
     </View>

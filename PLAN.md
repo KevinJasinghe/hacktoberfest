@@ -15,7 +15,7 @@ How we're building the game described in [`PRD.md`](PRD.md). Read the PRD first,
 | 4 | Level 2: drawing | Built: Skia finger drawing, Clear/Submit, Gemma score (mock for now), redraw on 75 or below. Jumpscare on failure comes in step 6. **Needs a phone check** |
 | 5 | Level 3: camera hunt | Built: camera permission, 2 Gemma-picked objects (kept across resets), photo check (mock for now), selfie with a "BEHIND YOU" overlay. **Needs a phone check** |
 | 6 | Jumpscares, music, loader | Built: jumpscare pop-up and sound on every timeout, failed drawing and failed photo, 1–2 random scares per run, looping music, Lottie skull loader. **Needs a phone check** |
-| 7 | Firebase auth, saving runs, leaderboard | Not started. **Needs the Firebase project** |
+| 7 | Firebase auth, saving runs, leaderboard | Built: email/password sign-up with display name, saved login, completed runs saved, best-run leaderboard. Untested: **needs the Firebase keys in `.env`**. Without them the app runs as a guest with no leaderboard |
 | 8 | Level 1: puzzles | Built: 3 riddle/math puzzles from Gemma (mock for now), typed answers checked loosely, new puzzles on reset. Sudoku skipped for now. **Needs a phone check** |
 | 9 | Polish the full run | Not started |
 

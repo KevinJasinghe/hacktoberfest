@@ -129,8 +129,9 @@ export function drawingPrompt(): Promise<string> {
     'drawingPrompt',
     async () => {
       const r = (await ask(
-        `Give the player one spooky thing to draw with their finger in under a minute, inspired by ${sample(THEMES, 1)[0]}. ` +
-          'Keep it to one simple, recognizable object or creature in at most 4 words, with no scene or extra details (e.g. "a bat", "a jack-o-lantern"). ' +
+        `Give the player one spooky thing to draw with their finger in under 30 seconds, loosely inspired by ${sample(THEMES, 1)[0]}. ` +
+          'It must be a single, very simple shape a child could sketch in 10 seconds: one or two words, no scene, no details, nothing with many parts ' +
+          '(e.g. "a ghost", "a bat", "a pumpkin", "a skull", "a moon", "a cat", "an eye"). ' +
           'Format: {"prompt":"..."}',
         undefined,
         CREATIVE,
@@ -146,9 +147,12 @@ export function scoreDrawing(imageBase64: string, prompt: string): Promise<Drawi
     'scoreDrawing',
     async () => {
       const r = (await ask(
-        `The player was told to draw: "${prompt}". This image is their finger drawing (white lines on black). ` +
+        `The player was told to draw: "${prompt}". This image is their finger drawing (coloured lines on a black background; colours are just the player's choice). ` +
           'Score from 0 to 100 how well it depicts the prompt. Judge recognizability, not artistic skill; a clear, simple sketch of the right thing deserves 80+. ' +
-          'A blank, random, or wrong drawing scores under 40. Add a one-sentence taunting comment. ' +
+          'A blank, random, or wrong drawing scores under 40. ' +
+          'Also write a short, genuinely funny comment (max 20 words) about what you actually see in the drawing. Be a smug, taunting haunting spirit with Reddit-style humour: ' +
+          'dry deadpan sarcasm, exaggerated understatement, internet-comment energy (think "bro", "skill issue", "this is fine", mock-serious reviews, relatable roast-comment formats), mixed with spooky jokes. ' +
+          'Roast the drawing if it is bad; give grudging, sarcastic praise if it is good. Aim the jokes at the drawing, never at the player\'s identity, body or background. PG-13: no slurs, no swearing, nothing crude or hateful. ' +
           'Format: {"score":number,"comment":"..."}',
         imageBase64,
       )) as { score?: unknown; comment?: unknown };

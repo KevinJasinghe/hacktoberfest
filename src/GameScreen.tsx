@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
+import DungeonBackground from './DungeonBackground';
 import Level1 from './Level1';
 import Level2 from './Level2';
 import Level3 from './Level3';
@@ -67,6 +68,7 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
   const props: LevelProps = { onClear, onTimeout };
   return (
     <View style={ui.screen}>
+      {level === 1 && <DungeonBackground />}
       {level === 0 && <Level1 key={key} {...props} />}
       {level === 1 && <Level2 key={key} {...props} />}
       {level === 2 && <Level3 key={key} {...props} objectsRef={level3Objects} />}

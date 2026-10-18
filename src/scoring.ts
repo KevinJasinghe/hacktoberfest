@@ -1,4 +1,4 @@
-export const LEVEL_LIMITS = { 1: 180, 2: 180, 3: 150 } as const;
+export const LEVEL_LIMITS = { 1: 180, 2: 30, 3: 150 } as const;
 export const LEVEL3_ITEM_LIMITS = [60, 60, 30];
 export const MIN_LEVEL_POINTS = 100;
 export const TIMEOUT_PENALTY = 250;

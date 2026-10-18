@@ -24,17 +24,16 @@ export const STORY: Story = {
   afterLock: [
     // after lock 1 (the riddle): the prisoner appears, on the puzzle before the last
     [
-      { who: 'ghost', mood: 'cute', bg: 'door', line: 'Clever little thing. The first lock was a gift.' },
-      { who: 'none', mood: 'creepy', bg: 'floor', sfx: 'chain', line: 'Somewhere in the dark, a chain drags across the stone.' },
-      { who: 'none', mood: 'creepy', bg: 'dark', fx: 'blackout', sfx: 'heartbeatSlow', line: 'The candle gutters out. In the dark, something breathes beside you.' },
-      { who: 'skeleton', mood: 'creepy', bg: 'window', line: 'I solved the first lock too. Then I stopped to rest.' },
-      { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: "Don't rest. One lock left. Hurry, little mouse." },
+      { who: 'ghost', mood: 'cute', bg: 'door', line: 'Clever little thing.' },
+      { who: 'none', mood: 'creepy', bg: 'dark', fx: 'blackout', sfx: 'heartbeatSlow', line: 'The candle dies. Something breathes beside you.' },
+      { who: 'skeleton', mood: 'creepy', bg: 'window', line: 'I solved the first lock too. Then I rested.' },
+      { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: "Don't rest. One lock left. Hurry." },
     ],
     // after lock 2 (the sum), leading into Level 2
     [
-      { who: 'ghost', mood: 'creepy', bg: 'doorSkull', line: "...No. That's not possible. Nobody solves the last lock." },
-      { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: 'Go, then. Climb. The house is tall, and I am not the only one who lives here.' },
-      { who: 'none', mood: 'creepy', bg: 'doorLight', sfx: 'doorOpen', line: 'The door groans open. Above you, the second floor is waiting.' },
+      { who: 'ghost', mood: 'creepy', bg: 'doorSkull', line: '...Impossible. Nobody solves the last lock.' },
+      { who: 'ghost', mood: 'creepy', bg: 'skullClose', fx: 'lunge', line: 'Go, then. Climb. I am not the only one who lives here.' },
+      { who: 'none', mood: 'creepy', bg: 'doorLight', sfx: 'doorOpen', line: 'The door groans open. The second floor awaits.' },
     ],
   ],
 };

@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
-import CellarBackground from './CellarBackground';
 import DungeonBackground from './DungeonBackground';
 import Level1 from './Level1';
 import Level2 from './Level2';
@@ -21,14 +20,14 @@ export type RunResult = {
 const LIMITS = [LEVEL_LIMITS[1], LEVEL_LIMITS[2], LEVEL_LIMITS[3]];
 const LAST_LEVEL = 2;
 
-// Runs Levels 1 → 3 in order. A timeout remounts the current level (new attempt) and costs points.
+// Runs Levels 1 → 3 in order. Losing a level (timeout or a wrong photo) moves on to the next one and costs points.
 export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => void }) {
   const [level, setLevel] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [times, setTimes] = useState([0, 0, 0]);
   const [points, setPoints] = useState<number[]>([]);
   const [timeouts, setTimeouts] = useState(0);
-  const level3Objects = useRef<string[] | null>(null); // kept across a Level 3 timeout, cleared when the run restarts
+  const level3Objects = useRef<string[] | null>(null);
   const { scare } = useJumpscare();
   useRandomScares();
 
@@ -39,10 +38,14 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
     return next;
   };
 
-  const onClear = (secondsRemaining: number, spent: number) => {
+  // Ends the current level and moves on (or finishes the run after the last one). A level that was lost
+  // scores 0 points and costs one timeout penalty; nothing ever resets.
+  const finishLevel = (secondsRemaining: number, spent: number, lost = false) => {
     const nextTimes = addTime(spent);
-    const nextPoints = [...points, levelPoints(secondsRemaining, LIMITS[level])];
+    const nextPoints = [...points, lost ? 0 : levelPoints(secondsRemaining, LIMITS[level])];
+    const nextTimeouts = lost ? timeouts + 1 : timeouts;
     setPoints(nextPoints);
+    setTimeouts(nextTimeouts);
     if (level < LAST_LEVEL) {
       setLevel(level + 1);
       setAttempt(0);
@@ -52,38 +55,37 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
     onFinish({
       levelTimes: nextTimes.map(round1),
       levelPoints: nextPoints,
-      timeouts,
-      totalScore: totalScore(nextPoints, timeouts),
+      timeouts: nextTimeouts,
+      totalScore: totalScore(nextPoints, nextTimeouts),
       totalTime: round1(nextTimes.reduce((a, b) => a + b, 0)),
     });
   };
 
+  const onClear = (secondsRemaining: number, spent: number) => finishLevel(secondsRemaining, spent);
+
+  // Running out of time loses the level: a scare, then straight on to the next one.
   const onTimeout = (spent: number) => {
     scare();
-    addTime(spent);
-    setTimeouts(timeouts + 1);
-    setAttempt(attempt + 1);
+    finishLevel(0, spent, true);
   };
 
-  // A wrong Level 3 photo sends the player back to Level 1 with a fresh score.
-  const restartRun = () => {
-    level3Objects.current = null;
-    setLevel(0);
-    setAttempt(attempt + 1);
-    setTimes([0, 0, 0]);
-    setPoints([]);
-    setTimeouts(0);
+  // A wrong Level 3 photo loses that level too (Level 3 plays its own scare first).
+  const onWrong = (spent: number) => finishLevel(0, spent, true);
+
+  // A failure that costs points and gives a scare but lets the level carry on (Level 1's locks).
+  const onPenalty = () => {
+    scare();
+    setTimeouts((n) => n + 1);
   };
 
   const key = `${level}-${attempt}`;
-  const props: LevelProps = { onClear, onTimeout, attempt };
+  const props: LevelProps = { onClear, onTimeout, onPenalty, attempt };
   return (
     <View style={ui.screen}>
-      {level === 0 && <CellarBackground />}
-      {level === 1 && <DungeonBackground />}
+      <DungeonBackground />
       {level === 0 && <Level1 key={key} {...props} />}
       {level === 1 && <Level2 key={key} {...props} />}
-      {level === 2 && <Level3 key={key} {...props} onWrong={restartRun} objectsRef={level3Objects} />}
+      {level === 2 && <Level3 key={key} {...props} onWrong={onWrong} objectsRef={level3Objects} />}
     </View>
   );
 }

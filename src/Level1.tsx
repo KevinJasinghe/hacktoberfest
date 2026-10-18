@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { isCorrect } from './answers';
 import { useAudio } from './audio';
-import ClosingWalls from './ClosingWalls';
 import { Cellar, generatePuzzles } from './gemma';
 import * as haptics from './haptics';
 import { hintsFor, MAX_HINTS } from './hints';
@@ -23,9 +22,9 @@ const LOCK_NAMES = ['The Riddle', 'The Sum'];
 const LAST_LOCK = LOCK_NAMES.length - 1;
 
 // Level 1: a door with two locks. Lock 1 is a riddle and lock 2 a math puzzle, both written by Gemma.
-// Each lock has its own 15s timer; running out on either one resets the level.
-// A reset (timeout) remounts this level, which brings new puzzles.
-export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) {
+// Each lock has its own 15s timer. Running out costs points and gives a scare, but the player moves on
+// to the next puzzle (or out of the level after the last lock) instead of the level resetting.
+export default function Level1({ onClear, onPenalty, attempt = 0 }: LevelProps) {
   const [cellar, setCellar] = useState<Cellar | null>(null);
   const [lock, setLock] = useState(0); // index of the lock being worked on
   const [guess, setGuess] = useState('');
@@ -39,8 +38,22 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
   const banked = useRef({ left: 0, spent: 0 }); // time left and spent on the locks already opened
   const t = useCountdown(LIMIT, {
     paused: !cellar || !!scene,
-    onExpire: () => onTimeout(banked.current.spent + LIMIT),
+    onExpire: () => failLock(),
   });
+
+  const failLock = () => {
+    onPenalty?.();
+    banked.current.spent += LIMIT; // the lock's whole timer is gone and nothing is left over
+    setGuess('');
+    setHintCount(0);
+    if (lock < LAST_LOCK) {
+      setSpirit(cellar?.lines.wrong ?? null);
+      setLock(lock + 1);
+      t.reset(); // fresh timer for the next puzzle; no story scene, since the lock never opened
+    } else {
+      onClear(banked.current.left, banked.current.spent);
+    }
+  };
 
   useEffect(() => {
     generatePuzzles().then((c) => {
@@ -182,7 +195,6 @@ export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) 
         </Pressable>
       </ScrollView>
       <Animated.View pointerEvents="none" style={[styles.flash, { opacity: flash }]} />
-      <ClosingWalls remaining={t.remaining} startSec={LIMIT} />
     </KeyboardAvoidingView>
   );
 }

@@ -16,7 +16,7 @@ import { useCountdown } from './useCountdown';
 // The object is common enough to be in the room, like a pumpkin or balloons.
 // Gemma checks each photo. A wrong photo jumpscares and restarts the whole game.
 // The selfie is not checked. A doll or a nun lunges into that shot, and the shutter fires on its own.
-type Props = LevelProps & { onWrong: () => void; objectsRef: MutableRefObject<string[] | null> };
+type Props = LevelProps & { onWrong: (timeSpent: number) => void; objectsRef: MutableRefObject<string[] | null> };
 
 type Target = { label: string; title: string; gemma: string };
 
@@ -105,7 +105,7 @@ export default function Level3({ onClear, onTimeout, onWrong, objectsRef }: Prop
       target={step < targets.length ? targets[step] : null}
       objectCount={targets.length}
       onPass={clearStep}
-      onWrong={onWrong}
+      onWrong={(stepSpent) => onWrong(spent.current + stepSpent)}
       onTimeout={(stepSpent) => onTimeout(spent.current + stepSpent)}
     />
   );
@@ -226,7 +226,7 @@ function CameraStep({
   target: Target | null;
   objectCount: number;
   onPass: (remaining: number, spent: number) => void;
-  onWrong: () => void;
+  onWrong: (stepSpent: number) => void;
   onTimeout: (spent: number) => void;
 }) {
   const limit = LEVEL3_ITEM_LIMITS[step];
@@ -280,7 +280,7 @@ function CameraStep({
         return true;
       }
       scare('GET OUT');
-      onWrong();
+      onWrong(elapsed);
       return true;
     } catch {
       setComment('The camera blinked. Try again.');

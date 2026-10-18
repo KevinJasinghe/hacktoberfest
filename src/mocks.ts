@@ -1,16 +1,16 @@
 // Fallback responses used when Gemma fails, is rate limited, or EXPO_PUBLIC_USE_MOCKS=1.
 import type { Cellar, DrawingScore, PhotoCheck, Puzzle } from './gemma';
-import { RIDDLES } from './riddles';
+import { EASY_RIDDLES } from './riddles';
 
 const pick = <T>(list: T[]) => list[Math.floor(Math.random() * list.length)];
 const shuffle = <T>(list: T[]) => [...list].sort(() => Math.random() - 0.5);
 
 const MATH: Puzzle[] = [
-  { type: 'math', question: 'A coffin holds 3 skeletons. How many coffins do you need for 21 skeletons?', answers: ['7'], hint: 'This one uses division.', expression: '21 / 3' },
-  { type: 'math', question: 'A ghost haunts 4 rooms a night. How many rooms does it haunt in a week?', answers: ['28'], hint: 'This one uses multiplication.', expression: '4 x 7' },
-  { type: 'math', question: '13 candles are lit. The wind blows out 5, then you relight 2. How many are lit?', answers: ['10'], hint: 'This one uses subtraction and addition.', expression: '13 - 5 + 2' },
-  { type: 'math', question: 'What is 6 × 6 + 6?', answers: ['42'], hint: 'This one uses multiplication and addition.', expression: '6 x 6 + 6' },
-  { type: 'math', question: 'A spider has 8 legs. How many legs do 5 spiders have?', answers: ['40'], hint: 'This one uses multiplication.', expression: '8 x 5' },
+  { type: 'math', question: '9 candles are lit and the wind blows out 4. How many are still lit?', answers: ['5'], hint: 'This one uses subtraction.', expression: '9 - 4' },
+  { type: 'math', question: 'A ghost haunts 3 rooms a night. How many rooms in 4 nights?', answers: ['12'], hint: 'This one uses multiplication.', expression: '3 x 4' },
+  { type: 'math', question: 'There are 8 bats in the attic and 5 more arrive. How many bats now?', answers: ['13'], hint: 'This one uses addition.', expression: '8 + 5' },
+  { type: 'math', question: 'A spider has 8 legs. How many legs do 2 spiders have?', answers: ['16'], hint: 'This one uses multiplication.', expression: '8 x 2' },
+  { type: 'math', question: 'You find 6 keys, then 7 more under the bed. How many keys is that?', answers: ['13'], hint: 'This one uses addition.', expression: '6 + 7' },
 ];
 
 const PROMPTS = [
@@ -40,7 +40,7 @@ const OBJECTS = ['pumpkin', 'balloons', 'candle', 'candy', 'plastic spider', 'pa
 export const mocks = {
   // One riddle (from the vetted bank) then one math puzzle, plus the spirit's lines.
   cellar: (): Cellar => {
-    const riddle = pick(RIDDLES);
+    const riddle = pick(EASY_RIDDLES);
     return {
       puzzles: [
         { type: 'riddle', ...riddle },

@@ -3,7 +3,7 @@
 import { describeOps } from './hints';
 import { evaluate } from './mathExpr';
 import { mocks } from './mocks';
-import { RIDDLES } from './riddles';
+import { EASY_RIDDLES } from './riddles';
 
 const MODEL = 'gemma-4-26b-a4b-it';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
@@ -114,18 +114,18 @@ type RawCellar = {
 };
 
 async function buildCellar(): Promise<Cellar> {
-  const options = sample(RIDDLES, 5);
+  const options = sample(EASY_RIDDLES, 5);
   const theme = sample(THEMES, 1)[0];
   const r = (await ask(
     'You are writing the first two locks of an escape room. Follow these rules exactly.\n\n' +
-      'LOCK 1, RIDDLE: pick exactly ONE riddle from this numbered list and retell it in one or two short, spooky sentences. ' +
+      'LOCK 1, RIDDLE: pick exactly ONE riddle from this numbered list and retell it in ONE short, simple sentence using plain everyday words, with a spooky touch. ' +
       'Keep the same meaning so the answer does not change, and never say the answer.\n' +
       options.map((o, i) => `${i}) ${o.question} (answer: ${o.answers[0]})`).join('\n') +
-      `\n\nLOCK 2, MATH: write ONE word problem themed around ${theme}. ` +
-      'It must be plain arithmetic with whole numbers and the operators + - x only. ' +
-      'Write every number as digits and state every number the player needs inside the question. ' +
-      'Give the arithmetic as "expression" (for example "13 - 5 + 2"); the game computes the answer itself, so do not give one. ' +
-      'The result must be a whole number from 2 to 99, solvable in under 10 seconds.\n\n' +
+      `\n\nLOCK 2, MATH: write ONE very easy word problem themed around ${theme}. ` +
+      'It must use exactly ONE operation, + or - or x, between two whole numbers that are each 20 or less. ' +
+      'Write both numbers as digits and state them inside the question. ' +
+      'Give the arithmetic as "expression" (for example "9 - 4"); the game computes the answer itself, so do not give one. ' +
+      'The result must be a whole number from 2 to 30, solvable in under 5 seconds.\n\n' +
       'Then write three taunts of one short sentence each: "intro" greeting the player, "wrong" for a wrong answer, "solved" for when a lock opens.\n\n' +
       'Reply with JSON only, in exactly this shape: ' +
       '{"riddle":{"index":0,"question":"..."},"math":{"question":"...","expression":"..."},"lines":{"intro":"...","wrong":"...","solved":"..."}}',
@@ -143,9 +143,11 @@ async function buildCellar(): Promise<Cellar> {
   const expression = str(r.math?.expression, 'expression');
   const mathText = str(r.math?.question, 'math question');
   const answer = evaluate(expression);
-  if (!Number.isInteger(answer) || answer < 2 || answer > 99) throw new Error(`bad math answer ${answer}`);
+  if (!/^\s*\d+\s*[+\-x×*]\s*\d+\s*$/.test(expression)) throw new Error(`math must be one operation: ${expression}`);
+  if (!Number.isInteger(answer) || answer < 2 || answer > 30) throw new Error(`bad math answer ${answer}`);
   for (const n of expression.match(/\d+/g) ?? []) {
     if (!new RegExp(`(^|\\D)${n}(\\D|$)`).test(mathText)) throw new Error(`question never states ${n}`);
+    if (Number(n) > 20) throw new Error(`number too big: ${n}`);
   }
 
   const lines = r.lines ?? {};

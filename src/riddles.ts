@@ -20,3 +20,7 @@ export const RIDDLES: Riddle[] = [
   { question: 'What has a head and a tail but no body?', answers: ['coin'], hint: 'You can flip it to decide something.' },
   { question: 'What is full of holes but still holds water?', answers: ['sponge'], hint: 'You wash the dishes with it.' },
 ];
+
+// Level 1 uses only the most guessable riddles, so the 15-second locks stay fair.
+const EASY_ANSWERS = ['piano', 'clock', 'shadow', 'comb', 'towel', 'bottle', 'egg', 'coin', 'sponge', 'fire'];
+export const EASY_RIDDLES = RIDDLES.filter((r) => EASY_ANSWERS.includes(r.answers[0]));

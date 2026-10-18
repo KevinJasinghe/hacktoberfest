@@ -130,15 +130,15 @@ export function scoreDrawing(imageBase64: string, prompt: string): Promise<Drawi
   );
 }
 
-export function pickObjects(count = 3): Promise<string[]> {
+export function pickObjects(count = 1): Promise<string[]> {
   return withFallback(
     'pickObjects',
     async () => {
       const r = (await ask(
-        `Pick ${count} different objects the player must find and photograph at an indoor Halloween gathering. ` +
-          'Each one must be spooky or Halloween-themed AND common enough to actually be in the room: a candle, a flashlight, an orange, wrapped candy, a mirror, a black hat, a plastic spider, a paper bat, a mug, a clock. ' +
-          'No rare props (no coffin, cauldron, grave, ouija board, or real skeleton). One or two words each, lowercase, all different. ' +
-          `Format: {"objects":[${Array(count).fill('"..."').join(',')}]} with exactly ${count} items.`,
+        `Pick ${count} object${count === 1 ? '' : 's'} the player must find and photograph at an indoor Halloween gathering. ` +
+          'It must be spooky or Halloween-themed AND common enough to actually be in the room, like a pumpkin or balloons. Other good picks: a candle, wrapped candy, a plastic spider, a paper bat. ' +
+          'No rare props (no coffin, cauldron, grave, ouija board, or real skeleton). One or two words, lowercase. ' +
+          `Format: {"objects":[${Array(count).fill('"..."').join(',')}]} with exactly ${count} item${count === 1 ? '' : 's'}.`,
       )) as { objects?: unknown[] };
       const objects = (r.objects ?? []).map((o) => str(o, 'object').toLowerCase());
       const unique = [...new Set(objects)];

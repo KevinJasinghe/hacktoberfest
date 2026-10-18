@@ -26,7 +26,7 @@ const PROMPTS = [
   'A spider hanging from its web',
 ];
 
-const OBJECTS = ['candle', 'flashlight', 'orange', 'candy', 'mirror', 'black hat', 'plastic spider', 'paper bat', 'jack-o-lantern', 'mug', 'clock', 'apple'];
+const OBJECTS = ['pumpkin', 'balloons', 'candle', 'candy', 'plastic spider', 'paper bat', 'jack-o-lantern'];
 
 export const mocks = {
   puzzles: (count: number): Puzzle[] => shuffle(PUZZLES).slice(0, count),
@@ -36,6 +36,6 @@ export const mocks = {
     const score = 55 + Math.floor(Math.random() * 41);
     return { score, comment: score > 75 ? 'Fine. You may pass... for now.' : 'Pathetic. Again.' };
   },
-  pickObjects: (count = 3): string[] => shuffle(OBJECTS).slice(0, count),
+  pickObjects: (count = 1): string[] => shuffle(OBJECTS).slice(0, count),
   checkPhoto: (): PhotoCheck => ({ match: true, comment: 'It will do.' }),
 };

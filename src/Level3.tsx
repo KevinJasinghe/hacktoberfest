@@ -12,8 +12,8 @@ import TimerBar from './TimerBar';
 import { colors, ui } from './theme';
 import { useCountdown } from './useCountdown';
 
-// Level 3: climb a stone hall, then photograph 3 objects Gemma picks and finish with a selfie.
-// The objects are common enough to be in the room, with a Halloween theme.
+// Level 3: climb a stone hall, photograph 1 Halloween object Gemma picks, then take a selfie.
+// The object is common enough to be in the room, like a pumpkin or balloons.
 // Gemma checks each photo. A wrong photo jumpscares and restarts the whole game.
 // The selfie is not checked. A skeleton, ghost, or doll lurks in that shot.
 type Props = LevelProps & { onWrong: () => void; objectsRef: MutableRefObject<string[] | null> };
@@ -24,16 +24,12 @@ const article = (name: string) => ('aeiou'.includes(name[0]) ? 'an' : 'a');
 const titleCase = (name: string) => name.replace(/\b[a-z]/g, (c) => c.toUpperCase());
 
 function toTarget(name: string): Target {
-  const word = article(name);
-  return { label: titleCase(name), title: `Photograph ${word} ${name}.`, gemma: `${word} real ${name}` };
+  const plural = name.endsWith('s');
+  const phrase = plural ? name : `${article(name)} ${name}`;
+  return { label: titleCase(name), title: `Photograph ${phrase}.`, gemma: plural ? `real ${name}` : `${article(name)} real ${name}` };
 }
 
-const HALL_LINES = [
-  'You step into the dark stone hall.',
-  'The stairs keep climbing.',
-  'Another landing. The walls are closer.',
-  'The final door. It wants to see you.',
-];
+const HALL_LINES = ['You step into the dark stone hall.', 'The final door. It wants to see you.'];
 
 type CreatureKind = 'skeleton' | 'ghost' | 'doll';
 const CREATURES: CreatureKind[] = ['skeleton', 'ghost', 'doll'];
@@ -49,7 +45,7 @@ export default function Level3({ onClear, onTimeout, onWrong, objectsRef }: Prop
   useEffect(() => {
     if (objectsRef.current) return;
     let cancelled = false;
-    pickObjects(3).then((picked) => {
+    pickObjects(1).then((picked) => {
       if (cancelled) return;
       objectsRef.current = picked;
       setObjects(picked);
@@ -280,7 +276,7 @@ function CameraStep({
     setChecking(false);
   };
 
-  const label = isSelfie ? 'Selfie' : `${target.label} · ${step + 1} of ${objectCount}`;
+  const label = isSelfie ? 'Selfie' : objectCount === 1 ? target.label : `${target.label} · ${step + 1} of ${objectCount}`;
   const heading = revealed ? 'It was behind you.' : isSelfie ? 'Now show me your face.' : target.title;
 
   return (

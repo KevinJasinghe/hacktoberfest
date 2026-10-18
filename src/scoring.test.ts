@@ -20,8 +20,8 @@ test('clearing with little time left still earns the 100 minimum', () => {
 test('level 3 uses the summed time left on each item', () => {
   const limit = LEVEL3_ITEM_LIMITS.reduce((a, b) => a + b, 0);
   assert.equal(LEVEL_LIMITS[3], limit);
-  // 40s, 30s and 25s left on the three objects, 10s on the selfie
-  assert.equal(levelPoints(40 + 30 + 25 + 10, limit), 500);
+  // 30s left on the object, 15s on the selfie
+  assert.equal(levelPoints(30 + 15, limit), 500);
 });
 
 test('timeouts cost 250 each', () => {

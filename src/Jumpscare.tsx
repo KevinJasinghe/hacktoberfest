@@ -25,9 +25,14 @@ export function JumpscareProvider({ children }: { children: ReactNode }) {
   const shake = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // A delayed call (Level 3 fires one from a timer) can outlive its player; touching a released player throws.
   const play = (p: ReturnType<typeof useAudioPlayer>) => {
-    p.seekTo(0);
-    p.play();
+    try {
+      p.seekTo(0).catch(() => {});
+      p.play();
+    } catch (e) {
+      console.warn('[jumpscare] sound failed:', e instanceof Error ? e.message : e);
+    }
   };
 
   const playScare = () => play(sounds[Math.floor(Math.random() * sounds.length)]);

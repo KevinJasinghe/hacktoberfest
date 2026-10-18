@@ -41,56 +41,84 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     turn: useAudioPlayer(require('../assets/audio/sfx-turn.mp3')),
     prisoner: useAudioPlayer(require('../assets/audio/sfx-prisoner.mp3')),
   };
+  // The players can be released and re-created (a hot reload does it), so the functions below always read the
+  // latest ones from this ref instead of holding the ones from the first render. Every player call is wrapped,
+  // because touching a released player throws ("Unable to find the native shared object").
+  const players = useRef({ tracks, sounds });
+  players.current = { tracks, sounds };
   const current = useRef<Track | null>(null);
-  const fades = useRef(new Map<Player, ReturnType<typeof setInterval>>());
+  const fades = useRef(new Map<string, ReturnType<typeof setInterval>>());
   const api = useRef<Audio | null>(null);
 
-  const fade = (player: Player, to: number, ms: number, done?: () => void) => {
-    const running = fades.current.get(player);
+  const safe = (fn: () => void) => {
+    try {
+      fn();
+    } catch (e) {
+      console.warn('[audio] player call failed:', e instanceof Error ? e.message : e);
+    }
+  };
+
+  // Ramps one track's volume. If the player has gone away mid-fade the ramp stops quietly.
+  const fade = (track: Track, to: number, ms: number, done?: () => void) => {
+    const running = fades.current.get(track);
     if (running) clearInterval(running);
-    const from = player.volume;
+    const player = players.current.tracks[track];
+    let from = 0;
+    safe(() => (from = player.volume));
     const steps = Math.max(1, Math.round(ms / STEP_MS));
     let i = 0;
     const id = setInterval(() => {
       i++;
-      player.volume = from + ((to - from) * i) / steps;
-      if (i >= steps) {
+      let ok = true;
+      try {
+        players.current.tracks[track].volume = from + ((to - from) * i) / steps;
+      } catch {
+        ok = false;
+      }
+      if (!ok || i >= steps) {
         clearInterval(id);
-        fades.current.delete(player);
-        done?.();
+        fades.current.delete(track);
+        if (ok) done?.();
       }
     }, STEP_MS);
-    fades.current.set(player, id);
+    fades.current.set(track, id);
   };
 
   if (!api.current) {
     api.current = {
       music: (track) => {
         if (current.current === track) return;
-        const old = current.current && tracks[current.current];
+        const old = current.current;
         current.current = track;
-        if (old) fade(old, 0, FADE_OUT_MS, () => old.pause());
-        const next = tracks[track];
-        next.loop = true;
-        next.volume = 0;
-        next.play();
-        fade(next, TRACK_VOLUME[track], FADE_IN_MS);
+        if (old) fade(old, 0, FADE_OUT_MS, () => safe(() => players.current.tracks[old].pause()));
+        safe(() => {
+          const next = players.current.tracks[track];
+          next.loop = true;
+          next.volume = 0;
+          next.play();
+        });
+        fade(track, TRACK_VOLUME[track], FADE_IN_MS);
       },
       sfx: (name, volume = 0.9) => {
-        const p = sounds[name];
-        p.volume = volume;
-        p.seekTo(0);
-        p.play();
+        safe(() => {
+          const p = players.current.sounds[name];
+          p.volume = volume;
+          p.seekTo(0).catch(() => {});
+          p.play();
+        });
       },
     };
   }
 
   // Scary music from the start, even with the iPhone's silent switch on.
   useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true });
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
     api.current?.music('main');
     const running = fades.current;
-    return () => running.forEach((id) => clearInterval(id));
+    return () => {
+      running.forEach((id) => clearInterval(id));
+      running.clear();
+    };
   }, []);
 
   return <Ctx.Provider value={api.current}>{children}</Ctx.Provider>;

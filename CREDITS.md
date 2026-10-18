@@ -17,3 +17,9 @@ All third-party assets used in the app and their licenses.
 | File | Asset | Author | License | Source |
 |------|-------|--------|---------|--------|
 | `assets/lottie/skull.json` | Pulsing skull | Original, made for this project | Ours | — |
+
+## Images
+
+| File | Asset | Author | License | Source |
+|------|-------|--------|---------|--------|
+| `assets/dungeon.jpeg` | Dungeon background (Level 2) | AI-generated with Google Gemini | Generated for this project; subject to Google's Gemini terms of use | — |

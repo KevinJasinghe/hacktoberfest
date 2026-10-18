@@ -16,7 +16,7 @@ All third-party assets used in the app and their licenses.
 
 | File | Asset | Author | License | Source |
 |------|-------|--------|---------|--------|
-| `assets/story/ghost-cute.png`, `ghost-creepy.png`, `skeleton-creepy.png` | Halloween Pixel Art Characters (with cute & creepy variants), cropped | davepickett | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | https://opengameart.org/content/halloween-pixel-art-characters-with-cute-creepy-variants |
+| `assets/story/ghost-cute.png`, `ghost-creepy.png`, `skeleton-creepy.png`, `night.png` | Halloween Pixel Art Characters (with cute & creepy variants); characters cropped, night sky background as is | davepickett | CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) | https://opengameart.org/content/halloween-pixel-art-characters-with-cute-creepy-variants |
 | `assets/story/door.png`, `door-skull.png` | Phantasy Dungeon Entrance (Dungeon-door layers), upscaled 3x | Luis Zuno (@ansimuz) | CC0 | https://opengameart.org/content/phantasy-dungeon-entrance |
 | `assets/images/cellar-wall.jpg` | Dark Brick Wall (diffuse, 1k, resized to 768 px) | Dario Barresi, Dimitrios Savva | CC0 | https://polyhaven.com/a/dark_brick_wall |
 

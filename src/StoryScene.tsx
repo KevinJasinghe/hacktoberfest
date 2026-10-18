@@ -3,7 +3,8 @@ import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensio
 import * as haptics from './haptics';
 import { useJumpscare } from './Jumpscare';
 import type { Beat } from './story';
-import { BACKGROUND, BACKGROUND_SKULL, spriteFor } from './storyAssets';
+import SceneBackground from './SceneBackground';
+import { spriteFor } from './storyAssets';
 import { colors, SCREEN_BLEED } from './theme';
 import Typewriter from './Typewriter';
 
@@ -33,7 +34,6 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
   const flicker = useRef(new Animated.Value(0)).current;
   const shake = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(1)).current;
-  const skull = useRef(new Animated.Value(0)).current;
   const dark = useRef(new Animated.Value(0)).current; // blackout overlay
   const flash = useRef(new Animated.Value(0)).current; // red flash on a lunge
   const ghostPlayed = useRef(false);
@@ -50,12 +50,11 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
     };
   }, [float, flicker]);
 
-  // Each beat: fade the character in, fade the skull onto the door on creepy beats, and rattle the scene.
+  // Each beat: fade the character in and, on creepy beats, rattle the scene.
   useEffect(() => {
     const creepy = beat.mood === 'creepy';
     enter.setValue(0);
     Animated.timing(enter, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-    Animated.timing(skull, { toValue: creepy ? 1 : 0, duration: 700, useNativeDriver: true }).start();
     if (beat.fx === 'blackout') {
       haptics.warn();
       Animated.sequence([
@@ -103,8 +102,7 @@ export default function StoryScene({ beats, onDone }: { beats: Beat[]; onDone: (
 
   return (
     <Animated.View style={[styles.scene, { transform: [{ translateX: shake }] }]}>
-      <Image source={BACKGROUND} resizeMode="cover" style={StyleSheet.absoluteFill} />
-      <Animated.Image source={BACKGROUND_SKULL} resizeMode="cover" style={[StyleSheet.absoluteFill, { opacity: skull }]} />
+      <SceneBackground name={beat.bg} />
       <View style={[StyleSheet.absoluteFill, styles.dim]} />
       <Animated.View
         pointerEvents="none"

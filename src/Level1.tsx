@@ -9,6 +9,8 @@ import { LevelProps } from './levels';
 import Loader from './Loader';
 import NumberPad from './NumberPad';
 import { LEVEL_LIMITS } from './scoring';
+import { STORY } from './story';
+import StoryScene from './StoryScene';
 import { generateSudoku } from './sudoku';
 import SudokuBoard from './SudokuBoard';
 import TimerBar from './TimerBar';
@@ -22,7 +24,7 @@ const LOCK_NAMES = ['The Riddle', 'The Sum', 'The Grid'];
 
 // Level 1: a door with three locks. Lock 1 is a riddle, lock 2 a math puzzle, lock 3 a 4x4 sudoku.
 // A reset (timeout) remounts this level, which brings new puzzles and a new sudoku.
-export default function Level1({ onClear, onTimeout }: LevelProps) {
+export default function Level1({ onClear, onTimeout, attempt = 0 }: LevelProps) {
   const [cellar, setCellar] = useState<Cellar | null>(null);
   const sudoku = useMemo(() => generateSudoku(), []);
   const [lock, setLock] = useState(0); // index of the lock being worked on
@@ -30,23 +32,25 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
   const [spirit, setSpirit] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [hintSignal, setHintSignal] = useState(0);
+  // Story cutscenes pause the timer. The intro plays on the first try only, not after every timeout.
+  const [scene, setScene] = useState<'intro' | 'lock0' | 'lock1' | null>(attempt === 0 ? 'intro' : null);
   const shake = useRef(new Animated.Value(0)).current;
   const flash = useRef(new Animated.Value(0)).current;
   const { playGhost } = useJumpscare();
-  const t = useCountdown(LIMIT, { paused: !cellar, onExpire: () => onTimeout(LIMIT) });
+  const t = useCountdown(LIMIT, { paused: !cellar || !!scene, onExpire: () => onTimeout(LIMIT) });
 
   useEffect(() => {
     generatePuzzles().then((c) => {
       setCellar(c);
-      setSpirit(c.lines.intro);
+      setSpirit(attempt === 0 ? null : c.lines.intro);
     });
   }, []);
 
   // Heartbeat buzz once a second while the clock is nearly out.
   const secondsLeft = Math.ceil(t.remaining);
   useEffect(() => {
-    if (cellar && secondsLeft > 0 && secondsLeft <= 10) haptics.heartbeat();
-  }, [secondsLeft, cellar]);
+    if (cellar && !scene && secondsLeft > 0 && secondsLeft <= 10) haptics.heartbeat();
+  }, [secondsLeft, cellar, scene]);
 
   if (!cellar) return <Loader text="The spirit is bolting three locks onto the cellar door..." />;
   const puzzle = lock < 2 ? cellar.puzzles[lock] : null;
@@ -62,7 +66,11 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
     setHint(null);
     if (lock < 2) {
       setLock(lock + 1);
-      setSpirit(skipped ? cellar.lines.intro : cellar.lines.solved);
+      if (skipped) setSpirit(cellar.lines.intro);
+      else {
+        setSpirit(null);
+        setScene(lock === 0 ? 'lock0' : 'lock1');
+      }
     } else onClear(t.remaining, t.elapsed);
   };
 
@@ -95,6 +103,15 @@ export default function Level1({ onClear, onTimeout }: LevelProps) {
     else if (key === '⌫') setGuess(guess.slice(0, -1));
     else setGuess((guess + key).slice(0, 6));
   };
+
+  if (scene) {
+    const beats = scene === 'intro' ? STORY.intro : STORY.afterLock[scene === 'lock0' ? 0 : 1];
+    return (
+      <KeyboardAvoidingView style={{ flex: 1 }}>
+        <StoryScene key={scene} beats={beats} onDone={() => setScene(null)} />
+      </KeyboardAvoidingView>
+    );
+  }
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>

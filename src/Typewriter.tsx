@@ -1,11 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleProp, Text, TextStyle } from 'react-native';
 
 const CHAR_MS = 28;
 
-// Reveals `text` one character at a time; tap to show it all.
-export default function Typewriter({ text, style }: { text: string; style?: StyleProp<TextStyle> }) {
+type Props = {
+  text: string;
+  style?: StyleProp<TextStyle>;
+  onComplete?: () => void; // fires once the whole line is showing
+  skipToken?: number; // bump it to reveal the whole line from outside
+};
+
+// Reveals `text` one character at a time; tap to show it all. Give it a `key` per line when using
+// onComplete/skipToken so each line starts from a clean state.
+export default function Typewriter({ text, style, onComplete, skipToken }: Props) {
   const [shown, setShown] = useState(0);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     setShown(0);
@@ -17,6 +27,14 @@ export default function Typewriter({ text, style }: { text: string; style?: Styl
     }, CHAR_MS);
     return () => clearInterval(id);
   }, [text]);
+
+  useEffect(() => {
+    if (skipToken) setShown(text.length);
+  }, [skipToken]);
+
+  useEffect(() => {
+    if (shown >= text.length) onCompleteRef.current?.();
+  }, [shown, text]);
 
   return (
     <Pressable onPress={() => setShown(text.length)}>

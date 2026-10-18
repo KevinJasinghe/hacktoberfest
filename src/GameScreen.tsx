@@ -65,7 +65,7 @@ export default function GameScreen({ onFinish }: { onFinish: (r: RunResult) => v
   };
 
   const key = `${level}-${attempt}`;
-  const props: LevelProps = { onClear, onTimeout };
+  const props: LevelProps = { onClear, onTimeout, attempt };
   return (
     <View style={ui.screen}>
       {level === 0 && <CellarBackground />}
